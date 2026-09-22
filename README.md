@@ -6,7 +6,7 @@
 
 ## 🔗 在线访问
 
-**https://alex43211.github.io/gaokao-volunteer/**
+**https://alex43211.github.io/Gaokao/**
 
 ## 核心功能
 
