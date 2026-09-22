@@ -204,8 +204,8 @@ window.PROVINCES = {
   },
   "西藏": {
     full: "西藏自治区", region: "西南", capital: "拉萨",
-    candidates: 3.6, univs: 7, doubleFirst: 0, gaokao: "3+1+2",
-    specialLineP: 380, specialLineH: 395,
+    candidates: 3.6, univs: 7, doubleFirst: 0, gaokao: "老高考",
+    specialLineP: 400, specialLineH: 400,
     hot: ["师范", "藏医", "农林", "计算机"],
     note: "考生最少、有专项政策红利；适合想稳定就业+对高原生活有准备的孩子，注意身体与适应的权衡。",
     industry: "文旅、清洁能源、边境贸易"
@@ -244,8 +244,8 @@ window.PROVINCES = {
   },
   "新疆": {
     full: "新疆维吾尔自治区", region: "西北", capital: "乌鲁木齐",
-    candidates: 23.1, univs: 55, doubleFirst: 4, gaokao: "3+1+2",
-    specialLineP: 432, specialLineH: 448,
+    candidates: 23.1, univs: 55, doubleFirst: 4, gaokao: "老高考",
+    specialLineP: 468, specialLineH: 451,
     hot: ["师范", "医学", "石油工程", "农学"],
     note: "棉花、油气、风光资源富集，本地就业稳定；跨省求学者注意提前规划回流或留疆政策。",
     industry: "能源(油气)、棉花纺织、新能源"

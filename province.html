@@ -63,6 +63,7 @@
 <div id="siteFooter"></div>
 
 <script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-province-lines.js"></script>
 <script src="assets/js/data-colleges.js"></script>
 <script src="assets/js/data-majors.js"></script>
 <script src="assets/js/data-majors-catalog.js"></script>
@@ -93,18 +94,75 @@ function provinceOf(full) {
   document.getElementById("provName").textContent = prov.full;
   document.getElementById("provSub").textContent =
     (prov.region === "台港澳" ? "特别地区" : "中国" + prov.region + "地区") + " · 省会/首府 " + prov.capital +
-    " · " + (prov.gaokao.includes("3+1+2") ? "新高考 3+1+2" : prov.gaokao.includes("3+3") ? "新高考 3+3" : prov.gaokao) +
+    " · " + (prov.gaokao.includes("3+1+2") ? "新高考 3+1+2" : prov.gaokao.includes("3+3") ? "新高考 3+3"
+      : prov.gaokao.includes("老高考") ? "老高考（文理分科）" : prov.gaokao) +
     (prov.region === "台港澳" ? " · 数据为示意" : "");
 
+  /* 2026 年真实投档线与报考人数（保持 5 个 KPI，与前栅格一致） */
+  const PLINE = (window.PROVINCE_LINES || {})[short];
+  const c26 = PLINE && PLINE.cands ? PLINE.cands[2026] : null;
+  const r26 = PLINE && PLINE.lines ? PLINE.lines[2026] : null;
+  const isOld = PLINE && PLINE.mode === "老高考";
+  const shortBatch = s => String(s)
+    .replace("部分特殊类型招生线", "特殊类型控制线")
+    .replace("特殊类型招生控制线", "特招线")
+    .replace("（参考线）", "");
+
   const kpis = [
-    { label: "考生规模(演示)", value: prov.candidates, unit: "万" },
+    { label: c26 ? "2026 报考人数" : "考生规模(演示)", value: c26 ? c26.v : prov.candidates, unit: "万" },
     { label: "普通高校", value: prov.univs, unit: "所" },
-    { label: "双一流", value: prov.doubleFirst, unit: "" },
-    { label: "物理类参考线", value: prov.specialLineP || "–", unit: "" },
-    { label: "历史类参考线", value: prov.specialLineH || "–", unit: "" }
+    { label: "双一流", value: prov.doubleFirst, unit: "" }
   ];
+  if (r26) {
+    if (PLINE.mode === "3+3") {
+      kpis.push({ label: shortBatch(r26[0][0]) + "（2026）", value: r26[0][1], unit: "" });
+      kpis.push({ label: shortBatch(r26[1][0]) + "（2026）", value: r26[1][1], unit: "" });
+    } else {
+      const a = isOld ? "理科" : "物理类", b2 = isOld ? "文科" : "历史类";
+      kpis.push({ label: shortBatch(r26[0][0]) + " · " + a, value: r26[0][1], unit: "" });
+      kpis.push({ label: shortBatch(r26[0][0]) + " · " + b2, value: r26[0][2], unit: "" });
+    }
+  } else {
+    kpis.push({ label: "物理类参考线(演示)", value: prov.specialLineP || "–", unit: "" });
+    kpis.push({ label: "历史类参考线(演示)", value: prov.specialLineH || "–", unit: "" });
+  }
   document.getElementById("kpiBand").innerHTML = kpis.map(k =>
     `<div class="kpi"><b>${k.value}${k.unit}</b><span>${k.label}</span></div>`).join("");
+
+  /* 该省近3年投档线一览（与地图页同源） */
+  (function () {
+    const host = document.querySelector(".prov-body .container");
+    if (!PLINE || !host) return;
+    const yrs = (window.PROVINCE_LINES_META || {}).years || [2024, 2025, 2026];
+    const head = PLINE.mode === "3+3" ? ["批次", "分数线"]
+      : PLINE.mode === "老高考" ? ["批次", "理科", "文科"] : ["批次", "物理类", "历史类"];
+    const blocks = yrs.map((y, i) => {
+      const rec = PLINE.cands[y];
+      const ct = (function () {
+        if (!rec) return "";
+        if (PLINE.mode === "3+1+2" && rec.p != null && rec.h != null)
+          return "物理类 " + rec.p + " 万 · 历史类 " + rec.h + " 万";
+        if (PLINE.mode === "老高考" && rec.p != null && rec.h != null)
+          return "理科 " + rec.p + " 万 · 文科 " + rec.h + " 万";
+        return (PLINE.mode === "3+3" ? "考生 " : "报考 ") + rec.v + " 万（" + rec.k + "）";
+      })();
+      const rows = PLINE.lines[y].map(r => r.length === 3
+        ? `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td><b>${r[2]}</b></td></tr>`
+        : `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join("");
+      return `<div class="lp-year">
+          <div class="lp-year-h"><b>${y} 年</b><span class="lp-cand">${ct}</span></div>
+          <table class="lp-table"><thead><tr>${head.map(h => "<th>" + h + "</th>").join("")}</tr></thead><tbody>${rows}</tbody></table>
+        </div>`;
+    }).join("");
+    const wrap = document.createElement("div");
+    wrap.className = "report-card";
+    wrap.style.marginBottom = "22px";
+    wrap.innerHTML = `<h2><span class="em">📈</span> 近3年投档线 · 报考人数
+        <span class="chip purple">${PLINE.mode === "3+3" ? "新高考 3+3" : PLINE.mode === "老高考" ? "老高考（文理分科）" : "新高考 3+1+2"}</span></h2>
+      <div class="grid g3 mt-16">${blocks}</div>
+      <div class="lp-src">数据说明：分数线为 ${prov.full} 教育考试院公布的录取控制分数线；人数为官方公布的报名（或实际参考）人数。仅供志愿规划参考，最终以省考试院当年《招生计划》与院校章程为准。</div>`;
+    host.insertBefore(wrap, host.firstChild);
+  })();
 
   document.getElementById("provNote").textContent = prov.note;
   document.getElementById("provIndustry").textContent = prov.industry;

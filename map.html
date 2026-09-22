@@ -14,7 +14,7 @@
   <div class="container">
     <div class="crumb">首页 / 全国高校地图</div>
     <h1>🗺️ 全国高校地图</h1>
-    <p>鼠标悬停查看各省概览，<b>点击任意省份</b>即可进入该省详情页：考生规模、高校分布、双一流数量、热门专业与择校建议（演示数据）。</p>
+    <p>鼠标悬停查看各省概览。<b>点击任意省份</b>，右侧即出现「近3年投档线」按钮——点一下就能看到该省 <b>2024 / 2025 / 2026</b> 三年各批次录取控制分数线（投档线）与报考人数（3+1+2 分物理类/历史类，老高考分理科/文科）。</p>
   </div>
 </section>
 
@@ -28,13 +28,17 @@
           <span><span class="legend-dot" style="background:#4a7dff"></span>中等</span>
           <span><span class="legend-dot" style="background:#2456e6"></span>较多</span>
           <span><span class="legend-dot" style="background:#b22222"></span>考生多（竞争激烈）</span>
-          <span style="margin-left:auto">👆 点击省份查看数据</span>
+          <span style="margin-left:auto">👆 点击省份查看近3年投档线</span>
         </div>
       </div>
-      <div class="demo-note mt-16">图中考生规模、线分为<b>演示数据</b>，仅用于功能演示；高考报名人数请以各省教育考试院公布为准。</div>
+      <div class="demo-note mt-16">地图底色为<b>演示性</b>的考生规模示意；右侧<b>投档线与报考人数为真实数据</b>（2024—2026），来源为各省教育考试院公开公布的控制分数线与报名（参考）人数，详见面板底部说明。</div>
     </div>
 
     <div class="side-panel">
+      <div class="side-stat-card" id="lineCard">
+        <h4>📈 近3年投档线 · 报考人数</h4>
+        <div id="lpBody"></div>
+      </div>
       <div class="side-stat-card">
         <h4>🌍 全国总览</h4>
         <div class="stat-mini"><span>覆盖省市区</span><span class="v">34</span></div>
@@ -60,6 +64,7 @@
 <div id="siteFooter"></div>
 
 <script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-province-lines.js"></script>
 <script src="assets/js/data-colleges.js"></script>
 <script src="assets/js/data-majors.js"></script>
 <script src="assets/js/data-majors-catalog.js"></script>
@@ -79,20 +84,164 @@ let sum = 0;
 Object.values(PROVINCES).forEach(p => { if (p.region !== "台港澳") sum += p.candidates; });
 document.getElementById("sumCandidates").textContent = sum.toFixed(0) + " 万";
 
+/* ============================================================
+   近3年投档线面板
+   ============================================================ */
+const PL = window.PROVINCE_LINES || {};
+const PL_META = window.PROVINCE_LINES_META || { years: [2024, 2025, 2026], national: {} };
+const PL_SPECIAL = window.PROVINCE_LINES_SPECIAL || {};
+let selProv = null;      /* 省份短名，如 "浙江" */
+let lineOpen = false;    /* 是否已展开投档线明细 */
+
+const MODE_TXT = { "3+3": "新高考 3+3", "3+1+2": "新高考 3+1+2", "老高考": "老高考（文理分科）" };
+
+function num(v, d) { const n = Number(v); if (!isFinite(n)) return "–"; return String(Number(n.toFixed(d === undefined ? 2 : d))); }
+function esc2(s) { return window.esc ? window.esc(String(s)) : String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+/* 人数文案：按模式给出正确口径 */
+function candText(rec, mode) {
+  if (!rec) return { head: "人数待公布", extra: "" };
+  if (mode === "3+1+2") {
+    if (rec.p != null && rec.h != null) {
+      return {
+        head: `物理类 ${num(rec.p)} 万 · 历史类 ${num(rec.h)} 万`,
+        extra: rec.pn ? "（" + rec.pn + "）" : ""
+      };
+    }
+    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，分科类人数未公布）" };
+  }
+  if (mode === "老高考") {
+    if (rec.p != null && rec.h != null) {
+      return {
+        head: `理科 ${num(rec.p)} 万 · 文科 ${num(rec.h)} 万`,
+        extra: rec.pn ? "（" + rec.pn + "）" : ""
+      };
+    }
+    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，分文理科人数未公布）" };
+  }
+  return { head: `考生人数 ${num(rec.v)} 万`, extra: rec.k ? "（" + rec.k + "）" : "" };
+}
+
+/* 人数同比增减（相对上一年），仅在有可比口径时给出 */
+function deltaText(cur, prev) {
+  if (!cur || !prev || cur.v == null || prev.v == null) return "";
+  if (cur.k !== prev.k) return "";
+  const d = cur.v - prev.v;
+  if (Math.abs(d) < 0.005) return "（较上年持平）";
+  return "（较上年 " + (d > 0 ? "+" : "") + num(d) + " 万）";
+}
+
+function yearBlock(y, prevY, item) {
+  const rec = item.cands[y];
+  const ct = candText(rec, item.mode);
+  const dl = deltaText(rec, item.cands[prevY]);
+
+  let thead, rows;
+  if (item.mode === "3+3") {
+    thead = `<tr><th>批次</th><th>分数线</th></tr>`;
+    rows = item.lines[y].map(r => `<tr><td>${esc2(r[0])}</td><td><b>${r[1]}</b></td></tr>`).join("");
+  } else if (item.mode === "3+1+2") {
+    thead = `<tr><th>批次</th><th>物理类</th><th>历史类</th></tr>`;
+    rows = item.lines[y].map(r => `<tr><td>${esc2(r[0])}</td><td><b>${r[1]}</b></td><td><b>${r[2]}</b></td></tr>`).join("");
+  } else {
+    thead = `<tr><th>批次</th><th>理科</th><th>文科</th></tr>`;
+    rows = item.lines[y].map(r => `<tr><td>${esc2(r[0])}</td><td><b>${r[1]}</b></td><td><b>${r[2]}</b></td></tr>`).join("");
+  }
+
+  const memo = rec && rec.memo ? `<div class="lp-src">· ${esc2(rec.memo)}</div>` : "";
+
+  return `<div class="lp-year">
+      <div class="lp-year-h">
+        <b>${y} 年</b>
+        <span class="lp-cand">${esc2(ct.head)}${ct.extra ? '<span class="muted">' + esc2(ct.extra) + "</span>" : ""}<span class="lp-delta">${esc2(dl)}</span></span>
+      </div>
+      <table class="lp-table"><thead>${thead}</thead><tbody>${rows}</tbody></table>
+      ${memo}
+    </div>`;
+}
+
+function renderLineCard() {
+  const box = document.getElementById("lpBody");
+
+  if (!selProv) {
+    const opts = PROVINCE_LIST.filter(n => PROVINCES[n].region !== "台港澳")
+      .map(n => `<option value="${esc2(n)}">${esc2(PROVINCES[n].full)}</option>`).join("");
+    box.innerHTML = `
+      <div class="lp-hint">👈 <b>点击左侧地图中的省份</b>，这里就会出现「近3年投档线」按钮，
+        点一下即可查看该省 <b>2024 / 2025 / 2026</b> 三年各批次投档线与报考人数。</div>
+      <select class="lp-select" id="lpSelect"><option value="">— 或直接选择省份 —</option>${opts}</select>
+      <div class="lp-src" style="margin-top:12px">全国高考报名人数：2024 年 <b>1342 万</b>、2025 年 <b>1335 万</b>、2026 年 <b>1290 万</b>（教育部）。</div>`;
+    const s = document.getElementById("lpSelect");
+    if (s) s.addEventListener("change", e => { if (e.target.value) selectProv(e.target.value); });
+    return;
+  }
+
+  const item = PL[selProv];
+  const special = PL_SPECIAL[selProv];
+  const prov = PROVINCES[selProv] || {};
+  const head = `<div class="lp-picked"><b>${esc2(prov.full || selProv)}</b>
+      <span class="chip purple">${esc2(item ? (MODE_TXT[item.mode] || item.mode) : (prov.gaokao || "—"))}</span></div>`;
+
+  /* 港澳台：不参加内地统一高考 */
+  if (!item) {
+    box.innerHTML = head + `<div class="lp-hint">${esc2(special || "该地区暂未收录高考投档线数据。")}</div>
+      <div class="lp-actions"><button class="btn btn-ghost btn-sm" id="btnDetail">进入省份详情页 →</button></div>`;
+    bindDetail();
+    return;
+  }
+
+  const yrs = PL_META.years || [2024, 2025, 2026];
+  const detail = yrs.map((y, i) => yearBlock(y, yrs[i - 1], item)).join("");
+
+  box.innerHTML = head + `
+    <button class="btn btn-brand btn-sm" id="btnLines" style="width:100%">
+      ${lineOpen ? "收起投档线明细 ▲" : "📊 查看近3年投档线（2024/2025/2026）▼"}
+    </button>
+    <div class="lp-detail" id="lpDetail" ${lineOpen ? "" : "hidden"}>
+      <div class="lp-global">报考人数口径：<b>${esc2(item.pk || "报名人数")}</b>。全国报名人数 2024 年 1342 万 → 2025 年 1335 万 → 2026 年 1290 万。</div>
+      ${detail}
+      <div class="lp-src">数据说明：分数线为 ${esc2(prov.full || selProv)} 教育考试院公布的分批次录取控制分数线；人数为官方公布的报名（或实际参考）人数。2024 年为老高考、2025 年起为新高考的省份，批次名称前后不同属正常调整。<br>© 恩卓智选 · 仅供志愿规划参考，最终以省考试院当年《招生计划》与院校章程为准。</div>
+    </div>
+    <div class="lp-actions">
+      <button class="btn btn-ghost btn-sm" id="btnDetail">进入省份详情页 →</button>
+    </div>`;
+
+  document.getElementById("btnLines").addEventListener("click", () => { lineOpen = !lineOpen; renderLineCard(); });
+  bindDetail();
+}
+
+function bindDetail() {
+  const b = document.getElementById("btnDetail");
+  if (b) b.addEventListener("click", () => {
+    const prov = PROVINCES[selProv];
+    location.href = "province.html?p=" + encodeURIComponent(prov ? prov.full : selProv);
+  });
+}
+
+function selectProv(short) {
+  if (!PROVINCES[short]) return;
+  if (selProv !== short) lineOpen = false;
+  selProv = short;
+  renderLineCard();
+  if (window.innerWidth <= 1020) {
+    const c = document.getElementById("lineCard");
+    if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+renderLineCard();
+
 /* 快捷省份按钮 */
 (function () {
   const box = document.getElementById("quickProvs");
-  const picks = ["北京", "江苏", "浙江", "广东", "河南", "湖北", "山东", "四川", "陕西", "辽宁", "湖南", "河北"];
-  box.innerHTML = picks.map(p => {
-    const full = PROVINCES[p].full;
-    return `<button data-full="${full}">${p}</button>`;
-  }).join("");
-  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-    location.href = "province.html?p=" + encodeURIComponent(b.dataset.full);
-  }));
+  const picks = ["北京", "江苏", "浙江", "广东", "河南", "湖北", "山东", "四川", "陕西", "辽宁", "湖南", "新疆"];
+  box.innerHTML = picks.map(p => `<button data-short="${p}">${p}</button>`).join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => selectProv(b.dataset.short)));
 })();
 
-/* 主地图 */
+/* ============================================================
+   主地图
+   ============================================================ */
 (function () {
   const el = document.getElementById("chinaMap");
   const chart = echarts.init(el);
@@ -111,15 +260,23 @@ document.getElementById("sumCandidates").textContent = sum.toFixed(0) + " 万";
       textStyle: { color: "#1c2740", fontSize: 13 },
       extraCssText: "box-shadow:0 10px 30px rgba(28,44,90,.15); border-radius:12px; padding:10px 14px;",
       formatter: function (p) {
-        const prov = PROVINCES[window.shortName(p.name)];
+        const short = window.shortName(p.name);
+        const prov = PROVINCES[short];
         if (!prov) return `<b>${p.name}</b>`;
-        const lineP = prov.specialLineP || "–";
+        const item = PL[short];
+        const ct = item ? candText(item.cands[2026], item.mode) : null;
+        const lineTxt = item
+          ? (item.mode === "3+1+2"
+            ? `<br>本科批 2026：物理 <b>${item.lines[2026][1][1]}</b> / 历史 <b>${item.lines[2026][1][2]}</b>`
+            : item.mode === "老高考"
+              ? `<br>本科二批 2026：理科 <b>${item.lines[2026][1][1]}</b> / 文科 <b>${item.lines[2026][1][2]}</b>`
+              : `<br>本科批 2026：<b>${item.lines[2026][1][1]}</b>`)
+          : "";
+        const candTxt = ct ? `<br>2026 年：<b>${ct.head}</b>` : "";
         return `<b style="font-size:15px">${prov.full === "台湾省" ? "中国台湾" : prov.name}</b>
-          <br>考生规模：<b>${prov.candidates} 万</b>（演示）
-          <br>普通高校：约 ${prov.univs} 所
-          <br>双一流：${prov.doubleFirst}
-          <br>${prov.gaokao.includes("3+1+2") ? "新高考 3+1+2" : prov.gaokao.includes("3+3") ? "新高考 3+3" : prov.gaokao}
-          <br><span style="color:#2456e6">👆 点击进入该省详情</span>`;
+          <br>普通高校：约 ${prov.univs} 所 · 双一流：${prov.doubleFirst}
+          <br>${item ? (MODE_TXT[item.mode] || "") : (prov.gaokao || "")}${candTxt}${lineTxt}
+          <br><span style="color:#2456e6">👆 点击查看该省近3年投档线</span>`;
       }
     },
     visualMap: {
@@ -145,10 +302,8 @@ document.getElementById("sumCandidates").textContent = sum.toFixed(0) + " 万";
   });
 
   chart.on("click", function (p) {
-    const short = window.shortName(p.name);
-    if (PROVINCES[short]) {
-      location.href = "province.html?p=" + encodeURIComponent(p.name);
-    }
+    const short = p.name === "台湾省" ? "中国台湾" : window.shortName(p.name);
+    if (PROVINCES[short]) selectProv(short);
   });
   chart.on("mouseover", () => (document.body.style.cursor = "pointer"));
   chart.on("mouseout", () => (document.body.style.cursor = "default"));
