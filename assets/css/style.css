@@ -540,7 +540,8 @@ img { max-width: 100%; display: block; }
   padding:8px 12px; background:#f4f7ff; border-bottom:1px solid var(--line);
 }
 .lp-year-h b { font-size:14px; color:var(--brand); font-weight:800; }
-.lp-year-h .lp-cand { font-size:12px; color:var(--ink-2); font-weight:600; }
+.lp-year-h .lp-cand { font-size:12px; color:var(--ink-2); font-weight:600; text-align:right; line-height:1.7; }
+.lp-year-h .lp-cand .muted { font-weight:500; }
 .lp-table { width:100%; border-collapse:collapse; font-size:12.5px; }
 .lp-table th, .lp-table td { padding:6px 10px; text-align:right; border-bottom:1px dashed #eef1f6; }
 .lp-table th:first-child, .lp-table td:first-child { text-align:left; color:var(--ink-2); font-weight:600; }

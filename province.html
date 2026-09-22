@@ -141,10 +141,10 @@ function provinceOf(full) {
       const ct = (function () {
         if (!rec) return "";
         if (PLINE.mode === "3+1+2" && rec.p != null && rec.h != null)
-          return "物理类 " + rec.p + " 万 · 历史类 " + rec.h + " 万";
+          return `物理类 ${rec.p} 万 · 历史类 ${rec.h} 万<span class="muted">（${rec.pn || "分科类人数"}，合计 ${Number((rec.p + rec.h).toFixed(2))} 万）</span>`;
         if (PLINE.mode === "老高考" && rec.p != null && rec.h != null)
-          return "理科 " + rec.p + " 万 · 文科 " + rec.h + " 万";
-        return (PLINE.mode === "3+3" ? "考生 " : "报考 ") + rec.v + " 万（" + rec.k + "）";
+          return `理科 ${rec.p} 万 · 文科 ${rec.h} 万<span class="muted">（${rec.pn || "分文理科人数"}，合计 ${Number((rec.p + rec.h).toFixed(2))} 万）</span>`;
+        return `${PLINE.mode === "3+3" ? "考生" : "报考"} ${rec.v} 万<span class="muted">（${rec.k}）</span>`;
       })();
       const rows = PLINE.lines[y].map(r => r.length === 3
         ? `<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td><b>${r[2]}</b></td></tr>`

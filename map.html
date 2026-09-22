@@ -99,34 +99,39 @@ function num(v, d) { const n = Number(v); if (!isFinite(n)) return "–"; return
 function esc2(s) { return window.esc ? window.esc(String(s)) : String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 /* 人数文案：按模式给出正确口径 */
+function totalOf(rec) {
+  if (rec && rec.p != null && rec.h != null) return Number((rec.p + rec.h).toFixed(2));
+  return rec && rec.v != null ? rec.v : null;
+}
 function candText(rec, mode) {
   if (!rec) return { head: "人数待公布", extra: "" };
   if (mode === "3+1+2") {
     if (rec.p != null && rec.h != null) {
       return {
         head: `物理类 ${num(rec.p)} 万 · 历史类 ${num(rec.h)} 万`,
-        extra: rec.pn ? "（" + rec.pn + "）" : ""
+        extra: "（" + (rec.pn || "分科类人数") + "，合计 " + num(rec.p + rec.h) + " 万）"
       };
     }
-    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，分科类人数未公布）" };
+    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，该年未公布分科类人数）" };
   }
   if (mode === "老高考") {
     if (rec.p != null && rec.h != null) {
       return {
         head: `理科 ${num(rec.p)} 万 · 文科 ${num(rec.h)} 万`,
-        extra: rec.pn ? "（" + rec.pn + "）" : ""
+        extra: "（" + (rec.pn || "分文理科人数") + "，合计 " + num(rec.p + rec.h) + " 万）"
       };
     }
-    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，分文理科人数未公布）" };
+    return { head: `报考人数 ${num(rec.v)} 万`, extra: "（" + (rec.k || "") + "，该年未公布分文理科人数）" };
   }
   return { head: `考生人数 ${num(rec.v)} 万`, extra: rec.k ? "（" + rec.k + "）" : "" };
 }
 
-/* 人数同比增减（相对上一年），仅在有可比口径时给出 */
+/* 人数同比增减（相对上一年），仅在同口径时给出 */
 function deltaText(cur, prev) {
-  if (!cur || !prev || cur.v == null || prev.v == null) return "";
+  const cv = totalOf(cur), pv = totalOf(prev);
+  if (cv == null || pv == null) return "";
   if (cur.k !== prev.k) return "";
-  const d = cur.v - prev.v;
+  const d = cv - pv;
   if (Math.abs(d) < 0.005) return "（较上年持平）";
   return "（较上年 " + (d > 0 ? "+" : "") + num(d) + " 万）";
 }
