@@ -54,19 +54,55 @@ const steps = [
 const form = {
   prov: null,        // 短名 e.g. 浙江
   provFull: null,
-  subjects: [],      // 3门
+  subjects: [],      // 3+1+2 / 3+3：3 门选科；老高考：["物理"]=理科 或 ["历史"]=文科
+  track: null,       // 仅老高考：「理科」/「文科」；其余模式为 null
   score: 560,
   isEstimate: true,
   pref: { major: "", city: "", family: "普通家庭", goal: "" }
 };
 let current = 0;
 
+/* ================= 高考模式辅助 ================= */
+// 由 PROVINCES[p].gaokao 派生三种模式：3+1+2 / 3+3 / 老高考
+function gaokaoMode(p) {
+  const g = (PROVINCES[p] && PROVINCES[p].gaokao) || "";
+  if (g.includes("3+1+2")) return "3+1+2";
+  if (g.includes("3+3")) return "3+3";
+  if (g.includes("老高考")) return "老高考";
+  return g || "3+1+2";
+}
+function isOldGaokao() { return !!form.prov && gaokaoMode(form.prov) === "老高考"; }
+// 是否按「物理类 / 理科」口径划线：老高考看文理，新高考看是否选物理
+function isPhysTrack() {
+  if (isOldGaokao()) return form.track === "理科";
+  return form.subjects.includes("物理");
+}
+// 当前口径对应的参考线分数
+function curLine() {
+  const prov = PROVINCES[form.prov];
+  if (!prov) return 0;
+  return isPhysTrack() ? prov.specialLineP : prov.specialLineH;
+}
+// 口径文案：老高考显示「理科 / 文科」，新高考显示「物理类 / 历史类」
+function lineName() {
+  if (isOldGaokao()) return form.track === "文科" ? "文科" : "理科";
+  return isPhysTrack() ? "物理类" : "历史类";
+}
+// 考生档案里的选科展示：老高考显示「理科」「文科」，其余显示三门组合
+function subjLabel(f) {
+  if (f.track) return f.track;
+  const arr = f.subjects || [];
+  return arr.length ? arr.join(" + ") : "未选择";
+}
+// 步骤二标题随模式变化
+function subjectStepTitle() { return isOldGaokao() ? "文理分科" : "选科组合"; }
+
 /* ================= 步骤条 ================= */
 function renderBar() {
   const bar = document.getElementById("stepBar");
   bar.innerHTML = steps.map((s, i) => `
     <div class="wstep ${i === current ? "on" : ""} ${i < current ? "done" : ""}" data-i="${i}">
-      <span class="n">${i < current ? "✓" : i + 1}</span>${s.title}
+      <span class="n">${i < current ? "✓" : i + 1}</span>${s.key === "subject" ? subjectStepTitle() : s.title}
     </div>`).join("");
 }
 function goto(i) {
@@ -81,7 +117,7 @@ function goto(i) {
 function validateStep(i) {
   const k = steps[i].key;
   if (k === "prov") return !!form.prov;
-  if (k === "subject") return form.subjects.length === 3;
+  if (k === "subject") return isOldGaokao() ? !!form.track : form.subjects.length === 3;
   if (k === "score") return form.score >= 200 && form.score <= 750;
   if (k === "pref") return true;
   return true;
@@ -126,11 +162,12 @@ function renderProv(body) {
     if (d.region === "台港澳") return;
     const o = document.createElement("div");
     o.className = "opt-card" + (form.prov === p ? " on" : "");
-    o.innerHTML = `${d.full.replace(/(省|市|自治区|特别行政区)/g, "")}<small>${d.region} · ${d.gaokao.includes("3+1+2") ? "3+1+2" : "3+3"}</small>`;
+    o.innerHTML = `${d.full.replace(/(省|市|自治区|特别行政区)/g, "")}<small>${d.region} · ${gaokaoMode(p)}</small>`;
     o.onclick = () => {
+      // 换省则重置选科——不同省份高考模式可能不同（如新疆/西藏为老高考）
+      if (form.prov !== p) { form.subjects = []; form.track = null; }
       form.prov = p; form.provFull = d.full;
-      box.querySelectorAll(".opt-card").forEach(x => x.classList.remove("on"));
-      o.classList.add("on");
+      renderProv(body);
     };
     box.appendChild(o);
   });
@@ -153,6 +190,8 @@ const COMBO_INFO = {
   "地理": "部分地学/城乡规划需要"
 };
 function renderSubject(body) {
+  // 老高考（新疆、西藏）：只分文/理，不选具体科目
+  if (isOldGaokao()) return renderTrack(body);
   body.innerHTML = `
     <div class="form-label">你选了哪三门？<b>选科组合（3+1+2 / 3+3）</b></div>
     <div class="demo-note mb-16">演示版将「物理+化学」视为工科/医科通行组合；若你未选物理，推荐专业将自动切换为文科向。</div>
@@ -180,6 +219,35 @@ function renderSubject(body) {
   stepActions(body, { nextLabel: "填写分数 →", onNext: () => { if (form.subjects.length !== 3) { toast("请选择恰好 3 门选科"); return; } goto(2); } });
 }
 
+/* 老高考：仅文科 / 理科两个选项 */
+const OLD_TRACKS = [
+  { k: "理科", sub: "物理", desc: "可报理工农医类，含计算机、电子、医学等" },
+  { k: "文科", sub: "历史", desc: "可报文史哲法经管类" }
+];
+function renderTrack(body) {
+  body.innerHTML = `
+    <div class="form-label">你是文科生还是理科生？<b>老高考 · 文理分科</b></div>
+    <div class="demo-note mb-16">${form.provFull || "该省"} 2026 年仍实行<b>老高考（文理分科）</b>：只分文科、理科，不再选具体科目。文科考生不能报考要求「物理」的专业。</div>
+    <div class="select-grid" id="trackGrid" style="grid-template-columns:repeat(2,1fr);"></div>`;
+  const box = body.querySelector("#trackGrid");
+  OLD_TRACKS.forEach(t => {
+    const sel = form.track === t.k;
+    const o = document.createElement("div");
+    o.className = "opt-card" + (sel ? " on" : "");
+    o.setAttribute("data-track", t.k);
+    o.style.cssText = sel ? "border-color:var(--brand);background:var(--brand-soft);" : "";
+    o.innerHTML = `<span style="font-size:17px;">${t.k}</span><small>${t.desc}</small>`;
+    o.onclick = () => { form.track = t.k; form.subjects = [t.sub]; renderSubject(body); };
+    box.appendChild(o);
+  });
+  const hint = document.createElement("div");
+  hint.className = "form-label mt-16";
+  hint.innerHTML = `👆 已选：<b style="color:var(--brand)">${form.track || "尚未选择"}</b>` +
+    (form.track ? `<span class="chip green ml-8">老高考</span>` : "");
+  body.appendChild(hint);
+  stepActions(body, { nextLabel: "填写分数 →", onNext: () => { if (!form.track) { toast("请选择文科或理科"); return; } goto(2); } });
+}
+
 /* ---------- 步骤3 分数 ---------- */
 function renderScore(body) {
   const minScore = 400, maxScore = 700;
@@ -189,7 +257,7 @@ function renderScore(body) {
       <button class="btn btn-sm ${!form.isEstimate ? "btn-brand" : "btn-ghost"}" id="realBtn">已出分（实际分数）</button>
       <button class="btn btn-sm ${form.isEstimate ? "btn-brand" : "btn-ghost"}" id="estBtn">还没出分（预估）</button>
     </div>
-    <div class="demo-note mb-16">${form.provFull ? "你的省份：" + form.provFull + "。演示一段线（物理类）约 " + PROVINCES[form.prov].specialLineP + " 分，可拖动分数感受冲稳保变化。" : ""}</div>
+    <div class="demo-note mb-16">${form.provFull ? `你的省份：${form.provFull}（${gaokaoMode(form.prov)}）。演示参考线（${lineName()}）约 ${curLine()} 分，可拖动分数感受冲稳保变化。` : ""}</div>
     <div class="score-slider">
       <div class="score-row mb-16">
         <div>
@@ -204,12 +272,10 @@ function renderScore(body) {
   const range = body.querySelector("#scoreRange");
   const val = body.querySelector("#scoreVal");
   const tag = body.querySelector("#scoreTag");
-  const prov = PROVINCES[form.prov];
   function update() {
     form.score = +range.value;
     val.textContent = form.score;
-    const isPhys = form.subjects.includes("物理");
-    const line = isPhys ? prov.specialLineP : prov.specialLineH;
+    const line = curLine();
     const diff = form.score - line;
     if (diff >= 40) { tag.textContent = "冲 985/顶尖211 段"; tag.className = "chip"; }
     else if (diff >= 10) { tag.textContent = "211/重点一本段"; tag.className = "chip green"; }
@@ -288,17 +354,15 @@ function renderPref(body) {
 
 /* ---------- 步骤5 生成（+ 跳转报告） ---------- */
 function renderDone(body) {
-  const phys = form.subjects.includes("物理");
-  const prov = PROVINCES[form.prov];
-  const line = phys ? prov.specialLineP : prov.specialLineH;
+  const line = curLine();
   const diff = form.score - line;
   body.innerHTML = `
     <div class="text-center" style="padding: 18px 0 6px;">
       <div style="font-size:56px;">🧮</div>
       <h2 style="font-size:24px; font-weight:900; margin-top:10px;">方案已就绪，预览后将生成可视化报告</h2>
-      <p class="muted mt-10">考生档案：${form.provFull} · ${form.subjects.join("+")} · ${form.score} 分${form.isEstimate ? "（预估）" : ""}</p>
+      <p class="muted mt-10">考生档案：${form.provFull} · ${gaokaoMode(form.prov)} · ${subjLabel(form)} · ${form.score} 分${form.isEstimate ? "（预估）" : ""}</p>
       <div class="mt-16 flex wrap gap-10" style="justify-content:center;">
-        <span class="chip">参考一段线 ${line}</span>
+        <span class="chip">参考线 ${line} 分（${lineName()}）</span>
         <span class="chip green">高于线 ${diff > 0 ? "+" : ""}${diff}</span>
         <span class="chip">偏好：${form.pref.major.length ? form.pref.major.join("/") : "系统推荐"}</span>
         <span class="chip gold">目标：${form.pref.goal}</span>
@@ -370,8 +434,8 @@ function cityPass(c) {
 
 function generatePlan() {
   const prov = PROVINCES[form.prov];
-  const phys = form.subjects.includes("物理");
-  const line = phys ? prov.specialLineP : prov.specialLineH;
+  const phys = isPhysTrack();
+  const line = curLine();
   const score = form.score;
   const scoreDiff = score - line;
   const isPoor = (form.pref.family || "").includes("困难");
@@ -408,7 +472,7 @@ function generatePlan() {
   borrow(wen, buckets.bao, 4);
   borrow(bao, buckets.chong, 4);   // 兜底若 chong 借空了也没有关系
 
-  // 专业推荐：按选科+偏好 + 就业确定性的规则推荐（演示）
+  // 专业推荐：按选科/文理 + 偏好 + 就业确定性的规则推荐（演示）
   const physBased = phys ? [
     { name: "计算机科学与技术", why: "就业面最宽、薪资上限高，普通家庭性价比之选", match: 96 },
     { name: "电气工程及其自动化", why: "进电网稳定，工科里确定性最强", match: 93 },
@@ -426,8 +490,9 @@ function generatePlan() {
 
   return {
     ts: Date.now(),
-    province: { short: form.prov, full: form.provFull, line, gaokao: prov.gaokao },
+    province: { short: form.prov, full: form.provFull, line, gaokao: prov.gaokao, mode: gaokaoMode(form.prov), track: form.track || null, lineName: lineName() },
     subjects: form.subjects,
+    track: form.track || null,
     phys,
     score,
     estimate: form.isEstimate,

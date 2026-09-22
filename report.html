@@ -33,6 +33,26 @@
 buildShell("report");
 const isDemo = window.qs("demo") === "1";
 
+/* ================= 高考模式辅助（口径与 plan.html 保持一致） ================= */
+function reportMode(prov) {
+  const g = (prov && prov.gaokao) || "";
+  if (g.includes("3+1+2")) return "3+1+2";
+  if (g.includes("3+3")) return "3+3";
+  if (g.includes("老高考")) return "老高考";
+  return g || "3+1+2";
+}
+// 档案选科展示：老高考显示「理科」「文科」，其余显示三门组合
+function reportSubjLabel(form) {
+  if (form && form.track) return form.track;
+  const arr = (form && form.subjects) || [];
+  return arr.length ? arr.join(" + ") : "未选择";
+}
+// 参考线口径文案：老高考显示「理科 / 文科」，新高考显示「物理类 / 历史类」
+function reportLineName(form, prov) {
+  if (reportMode(prov) === "老高考") return (form && form.track === "文科") ? "文科" : "理科";
+  return (form && form.phys) ? "物理类" : "历史类";
+}
+
 /* 若无数据且非 demo，引导回填报页 */
 if (!isDemo && !localStorage.getItem("zhitu_plan_v1")) {
   document.getElementById("reportRoot").innerHTML = `
@@ -73,7 +93,7 @@ function demoData() {
   return {
     ts: Date.now(),
     form: {
-      provFull: "浙江省", prov: "浙江", subjects: ["物理", "化学", "生物"], phys: true,
+      provFull: "浙江省", prov: "浙江", subjects: ["物理", "化学", "生物"], track: null, phys: true,
       score, estimate: false, pref: { major: ["计算机类"], city: "新一线", family: "普通工薪家庭", goal: "考研深造" }
     },
     demo: true,
@@ -98,6 +118,9 @@ function renderReport(data) {
   const line = (data.province && data.province.line) || (prov && (form.phys ? prov.specialLineP : prov.specialLineH));
   const score = form.score;
   const diff = score - line;
+  const mode = reportMode(prov);
+  const lineName = (data.province && data.province.lineName) || reportLineName(form, prov);
+  const subjText = reportSubjLabel(form);
   const dateStr = new Date(data.ts || Date.now()).toLocaleDateString("zh-CN");
 
   // 位次换算（演示模型）
@@ -113,7 +136,7 @@ function renderReport(data) {
         <div class="report-grid" style="grid-template-columns:repeat(4,1fr);">
           <div class="rkpi"><div class="l">估算全省位次</div><div class="v" style="font-size:24px;">${est.rank.toLocaleString("zh-CN")}</div><div class="d">约全省第 ${est.rank.toLocaleString("zh-CN")} 名</div></div>
           <div class="rkpi ok"><div class="l">超过考生比例</div><div class="v">${est.pctOver}<small>%</small></div><div class="d">演示模型估算</div></div>
-          <div class="rkpi ${est.diff >= 0 ? "ok" : "danger"}"><div class="l">高出参考线</div><div class="v">${est.diff > 0 ? "+" : ""}${est.diff}<small>分</small></div><div class="d">${provShortName} 物理一段线 ${est.line}</div></div>
+          <div class="rkpi ${est.diff >= 0 ? "ok" : "danger"}"><div class="l">高出参考线</div><div class="v">${est.diff > 0 ? "+" : ""}${est.diff}<small>分</small></div><div class="d">${provShortName} ${lineName} 参考线 ${est.line}</div></div>
           <div class="rkpi warn"><div class="l">本省考生规模</div><div class="v">${prov.candidates}<small>万</small></div><div class="d">普通高校约 ${prov.univs} 所</div></div>
         </div>
         <div class="mt-16" style="height:14px; background:#eef1f7; border-radius:999px; overflow:hidden;">
@@ -139,7 +162,7 @@ function renderReport(data) {
     <h1>高考志愿填报分析报告</h1>
     <div class="meta">
       <span>📍 省份 <b>${isDemo ? "浙江" : (data.province && data.province.full) || form.provFull || form.prov}</b></span>
-      <span>🧪 选科 <b>${form.subjects.join(" + ")}</b></span>
+      <span>🧪 选科 <b>${subjText}</b>${mode === "老高考" ? "（老高考 · 文理分科）" : ""}</span>
       <span>🎯 分数 <b>${score} 分${form.estimate ? "（预估）" : ""}</b></span>
       <span>📅 报告生成 <b>${dateStr}</b></span>
     </div>
@@ -155,7 +178,7 @@ function renderReport(data) {
   <div class="report-grid">
     <div class="rkpi"><div class="l">分数 vs 一段线</div>
       <div class="v ${diff >= 0 ? "ok" : "danger"}">${diff > 0 ? "+" : ""}${diff} <small>分</small></div>
-      <div class="d">参考线 ${line} 分（${form.phys ? "物理类" : "历史类"}，演示）</div></div>
+      <div class="d">参考线 ${line} 分（${lineName}，演示）</div></div>
     <div class="rkpi ${chong.length ? "" : "warn"}"><div class="l">可冲院校</div>
       <div class="v">${chong.length} <small>所</small></div><div class="d">录取概率约 ${chong.length ? Math.round(chong.reduce((s,c)=>s+c.prob,0)/chong.length) : 0}%</div></div>
     <div class="rkpi ok"><div class="l">稳/保院校</div>
