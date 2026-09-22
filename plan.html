@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 志愿模拟填报 · 恩卓智选</title>
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb">首页 / AI 志愿模拟填报</div>
+    <h1>🧮 AI 志愿模拟填报</h1>
+    <p>5 步生成你的专属志愿方案：省份 → 选科 → 分数 → 偏好 → 报告。全程使用<b>演示数据</b>，生成的冲稳保方案与专业推荐可作为填报思路参考。</p>
+  </div>
+</section>
+
+<section class="container" style="padding:30px 0 90px;">
+  <div class="wizard-card">
+    <!-- 步骤条 -->
+    <div class="wizard-steps" id="stepBar"></div>
+    <!-- 步骤体 -->
+    <div class="wizard-body" id="stepBody"></div>
+  </div>
+  <div class="demo-note mt-16">⚠️ 平台目前使用<b>模拟演示数据</b>（虚拟分数线/位次/概率），仅用于展示产品逻辑。真实填报请务必以<b>省教育考试院官方位次表</b>与目标院校近三年录取数据为准。</div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("plan");
+
+/* ================= 状态 ================= */
+const steps = [
+  { key: "prov", title: "选择省份" },
+  { key: "subject", title: "选科组合" },
+  { key: "score", title: "高考分数" },
+  { key: "pref", title: "志愿偏好" },
+  { key: "done", title: "生成方案" }
+];
+const form = {
+  prov: null,        // 短名 e.g. 浙江
+  provFull: null,
+  subjects: [],      // 3门
+  score: 560,
+  isEstimate: true,
+  pref: { major: "", city: "", family: "普通家庭", goal: "" }
+};
+let current = 0;
+
+/* ================= 步骤条 ================= */
+function renderBar() {
+  const bar = document.getElementById("stepBar");
+  bar.innerHTML = steps.map((s, i) => `
+    <div class="wstep ${i === current ? "on" : ""} ${i < current ? "done" : ""}" data-i="${i}">
+      <span class="n">${i < current ? "✓" : i + 1}</span>${s.title}
+    </div>`).join("");
+}
+function goto(i) {
+  if (i < 0 || i > steps.length - 1) return;
+  if (i > current && !validateStep(current)) { toast("请先完成本步骤的选择"); return; }
+  current = i;
+  renderBar();
+  renderBody();
+}
+
+/* ================= 步骤校验与渲染 ================= */
+function validateStep(i) {
+  const k = steps[i].key;
+  if (k === "prov") return !!form.prov;
+  if (k === "subject") return form.subjects.length === 3;
+  if (k === "score") return form.score >= 200 && form.score <= 750;
+  if (k === "pref") return true;
+  return true;
+}
+
+function renderBody() {
+  const body = document.getElementById("stepBody");
+  const key = steps[current].key;
+  if (key === "prov") return renderProv(body);
+  if (key === "subject") return renderSubject(body);
+  if (key === "score") return renderScore(body);
+  if (key === "pref") return renderPref(body);
+  if (key === "done") return renderDone(body);
+}
+
+function stepActions(body, { back = true, nextLabel = "下一步", onNext, canNext = true } = {}) {
+  const wrap = document.createElement("div");
+  wrap.className = "wizard-actions";
+  if (back) {
+    const b = document.createElement("button");
+    b.className = "btn btn-ghost"; b.textContent = "← 上一步";
+    b.onclick = () => goto(current - 1);
+    wrap.appendChild(b);
+  } else {
+    const sp = document.createElement("span"); wrap.appendChild(sp);
+  }
+  const n = document.createElement("button");
+  n.className = "btn btn-brand"; n.textContent = nextLabel;
+  n.onclick = () => onNext ? onNext() : goto(current + 1);
+  wrap.appendChild(n);
+  body.appendChild(wrap);
+}
+
+/* ---------- 步骤1 省份 ---------- */
+function renderProv(body) {
+  body.innerHTML = `
+    <div class="form-label">你在哪个省参加高考？<b>选择你的省份</b></div>
+    <div class="grid g4" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));" id="provGrid"></div>`;
+  const box = body.querySelector("#provGrid");
+  PROVINCE_LIST.forEach(p => {
+    const d = PROVINCES[p];
+    if (d.region === "台港澳") return;
+    const o = document.createElement("div");
+    o.className = "opt-card" + (form.prov === p ? " on" : "");
+    o.innerHTML = `${d.full.replace(/(省|市|自治区|特别行政区)/g, "")}<small>${d.region} · ${d.gaokao.includes("3+1+2") ? "3+1+2" : "3+3"}</small>`;
+    o.onclick = () => {
+      form.prov = p; form.provFull = d.full;
+      box.querySelectorAll(".opt-card").forEach(x => x.classList.remove("on"));
+      o.classList.add("on");
+    };
+    box.appendChild(o);
+  });
+  const hint = document.createElement("div");
+  hint.className = "form-label mt-16";
+  hint.innerHTML = `👆 已选：<b>${form.prov ? PROVINCES[form.prov].full : "未选择"}</b>` +
+    (form.prov ? `<span class="chip green ml-8">${PROVINCES[form.prov].gaokao}</span>` : "");
+  body.appendChild(hint);
+  stepActions(body, { back: false, nextLabel: "选科组合 →", onNext: () => { if (!form.prov) { toast("请先选择你的省份"); return; } goto(1); } });
+}
+
+/* ---------- 步骤2 选科 ---------- */
+const ALL_SUBJECTS = ["物理", "化学", "生物", "政治", "历史", "地理"];
+const COMBO_INFO = {
+  "物理": "可选超 95% 理工医专业",
+  "化学": "计算机/医学/材料硬门槛",
+  "生物": "医学生物类专业友好",
+  "政治": "法学/公安/马理论需选",
+  "历史": "文科专业大门钥匙",
+  "地理": "部分地学/城乡规划需要"
+};
+function renderSubject(body) {
+  body.innerHTML = `
+    <div class="form-label">你选了哪三门？<b>选科组合（3+1+2 / 3+3）</b></div>
+    <div class="demo-note mb-16">演示版将「物理+化学」视为工科/医科通行组合；若你未选物理，推荐专业将自动切换为文科向。</div>
+    <div class="select-grid" id="subGrid" style="grid-template-columns:repeat(3,1fr);"></div>`;
+  const box = body.querySelector("#subGrid");
+  ALL_SUBJECTS.forEach(s => {
+    const sel = form.subjects.includes(s);
+    const o = document.createElement("div");
+    o.className = "opt-card" + (sel ? " on" : "");
+    o.style.cssText = sel ? "border-color:var(--brand);background:var(--brand-soft);" : "";
+    o.innerHTML = `<span style="font-size:17px;">${s}</span><small>${COMBO_INFO[s]}</small>`;
+    o.onclick = () => {
+      const i = form.subjects.indexOf(s);
+      if (i >= 0) form.subjects.splice(i, 1);
+      else if (form.subjects.length < 3) form.subjects.push(s);
+      else { toast("只能选 3 门，先取消一门再选"); return; }
+      renderSubject(body);
+    };
+    box.appendChild(o);
+  });
+  const hint = document.createElement("div");
+  hint.className = "form-label mt-16";
+  hint.innerHTML = `👆 已选 <b>${form.subjects.length}/3</b>：<b style="color:var(--brand)">${form.subjects.join(" + ") || "尚未选择"}</b>`;
+  body.appendChild(hint);
+  stepActions(body, { nextLabel: "填写分数 →", onNext: () => { if (form.subjects.length !== 3) { toast("请选择恰好 3 门选科"); return; } goto(2); } });
+}
+
+/* ---------- 步骤3 分数 ---------- */
+function renderScore(body) {
+  const minScore = 400, maxScore = 700;
+  body.innerHTML = `
+    <div class="form-label">你的高考成绩？<b>预估或实际分数</b></div>
+    <div class="flex wrap gap-10 mb-16">
+      <button class="btn btn-sm ${!form.isEstimate ? "btn-brand" : "btn-ghost"}" id="realBtn">已出分（实际分数）</button>
+      <button class="btn btn-sm ${form.isEstimate ? "btn-brand" : "btn-ghost"}" id="estBtn">还没出分（预估）</button>
+    </div>
+    <div class="demo-note mb-16">${form.provFull ? "你的省份：" + form.provFull + "。演示一段线（物理类）约 " + PROVINCES[form.prov].specialLineP + " 分，可拖动分数感受冲稳保变化。" : ""}</div>
+    <div class="score-slider">
+      <div class="score-row mb-16">
+        <div>
+          <span class="score-value" id="scoreVal">${form.score}</span>
+          <small>分</small>
+        </div>
+        <span class="chip" id="scoreTag">—</span>
+      </div>
+      <input type="range" id="scoreRange" min="${minScore}" max="${maxScore}" step="1" value="${form.score}">
+      <div class="slider-ticks"><span>400</span><span>450</span><span>500</span><span>550</span><span>600</span><span>650</span><span>700</span></div>
+    </div>`;
+  const range = body.querySelector("#scoreRange");
+  const val = body.querySelector("#scoreVal");
+  const tag = body.querySelector("#scoreTag");
+  const prov = PROVINCES[form.prov];
+  function update() {
+    form.score = +range.value;
+    val.textContent = form.score;
+    const isPhys = form.subjects.includes("物理");
+    const line = isPhys ? prov.specialLineP : prov.specialLineH;
+    const diff = form.score - line;
+    if (diff >= 40) { tag.textContent = "冲 985/顶尖211 段"; tag.className = "chip"; }
+    else if (diff >= 10) { tag.textContent = "211/重点一本段"; tag.className = "chip green"; }
+    else if (diff >= -15) { tag.textContent = "一本压线段"; tag.className = "chip gold"; }
+    else { tag.textContent = "一段线下/专科段"; tag.className = "chip red"; }
+  }
+  range.addEventListener("input", update);
+  update();
+  body.querySelector("#realBtn").onclick = () => { form.isEstimate = false; renderScore(body); };
+  body.querySelector("#estBtn").onclick = () => { form.isEstimate = true; renderScore(body); };
+  stepActions(body, { nextLabel: "志愿偏好 →", onNext: () => goto(3) });
+}
+
+/* ---------- 步骤4 偏好 ---------- */
+function renderPref(body) {
+  const majorOpts = ["计算机类", "电子信息类", "医学类", "师范类", "经管财经类", "法学类", "机械电气类", "不限/听推荐"];
+  const cityOpts = ["一线城市", "新一线", "省会城市", "离家近", "不限"];
+  const goalOpts = ["本科就业", "考研深造", "考公进体制", "出国留学", "还没想好"];
+  const famOpts = ["普通工薪家庭", "条件宽裕有支持", "困难家庭需尽快就业"];
+  body.innerHTML = `
+    <div class="form-label">① 倾向的专业方向？<b>（可多选，最多3个）</b></div>
+    <div class="flex wrap gap-10 mb-24" id="prefMajor"></div>
+    <div class="form-label">② 城市偏好？<b>单选</b></div>
+    <div class="flex wrap gap-10 mb-24" id="prefCity"></div>
+    <div class="form-label">③ 家庭/发展目标？<b>单选 × 1</b></div>
+    <div class="select-grid" id="prefGoal" style="grid-template-columns:repeat(4,1fr);"></div>
+    <div class="form-label mt-24">④ 家庭条件？<b>单选</b></div>
+    <div class="select-grid" id="prefFam" style="grid-template-columns:repeat(3,1fr);"></div>`;
+
+  // major 多选
+  const mb = body.querySelector("#prefMajor");
+  majorOpts.forEach(o => {
+    const b = document.createElement("button");
+    const on = form.pref.major.includes(o);
+    b.className = "btn btn-sm " + (on ? "btn-brand" : "btn-ghost");
+    b.textContent = o;
+    b.onclick = () => {
+      const arr = form.pref.major = Array.isArray(form.pref.major) ? form.pref.major : [];
+      const i = arr.indexOf(o);
+      if (i >= 0) arr.splice(i, 1);
+      else if (arr.length < 3) arr.push(o);
+      else { toast("最多选 3 个方向"); return; }
+      renderPref(body);
+    };
+    mb.appendChild(b);
+  });
+  // city 单选
+  const cb = body.querySelector("#prefCity");
+  cityOpts.forEach(o => {
+    const b = document.createElement("button");
+    b.className = "btn btn-sm " + (form.pref.city === o ? "btn-brand" : "btn-ghost");
+    b.textContent = o;
+    b.onclick = () => { form.pref.city = o; renderPref(body); };
+    cb.appendChild(b);
+  });
+  // goal 单选
+  const gb = body.querySelector("#prefGoal");
+  goalOpts.forEach(o => {
+    const d = document.createElement("div");
+    d.className = "opt-card" + (form.pref.goal === o ? " on" : "");
+    d.innerHTML = o;
+    d.onclick = () => { form.pref.goal = o; renderPref(body); };
+    gb.appendChild(d);
+  });
+  // family 单选
+  const fb = body.querySelector("#prefFam");
+  famOpts.forEach(o => {
+    const d = document.createElement("div");
+    d.className = "opt-card" + (form.pref.family === o ? " on" : "");
+    d.innerHTML = o.replace(/^/, "<b>").replace(/$/, "</b>");
+    d.onclick = () => { form.pref.family = o; renderPref(body); };
+    fb.appendChild(d);
+  });
+  stepActions(body, { nextLabel: "生成志愿方案 →", onNext: () => { if (!form.pref.city) { toast("请选择城市偏好"); return; } if (!form.pref.family) { toast("请选择家庭条件"); return; } goto(4); } });
+}
+
+/* ---------- 步骤5 生成（+ 跳转报告） ---------- */
+function renderDone(body) {
+  const phys = form.subjects.includes("物理");
+  const prov = PROVINCES[form.prov];
+  const line = phys ? prov.specialLineP : prov.specialLineH;
+  const diff = form.score - line;
+  body.innerHTML = `
+    <div class="text-center" style="padding: 18px 0 6px;">
+      <div style="font-size:56px;">🧮</div>
+      <h2 style="font-size:24px; font-weight:900; margin-top:10px;">方案已就绪，预览后将生成可视化报告</h2>
+      <p class="muted mt-10">考生档案：${form.provFull} · ${form.subjects.join("+")} · ${form.score} 分${form.isEstimate ? "（预估）" : ""}</p>
+      <div class="mt-16 flex wrap gap-10" style="justify-content:center;">
+        <span class="chip">参考一段线 ${line}</span>
+        <span class="chip green">高于线 ${diff > 0 ? "+" : ""}${diff}</span>
+        <span class="chip">偏好：${form.pref.major.length ? form.pref.major.join("/") : "系统推荐"}</span>
+        <span class="chip gold">目标：${form.pref.goal}</span>
+      </div>
+    </div>
+    <div id="miniPreview" class="mt-24"></div>`;
+  // 即时预览方案（不存 localStorage，仅展示代表院校）
+  const pv = generatePlan();
+  const pvEl = document.getElementById("miniPreview");
+  if (pvEl) {
+    const bucket = (label, color, arr) => {
+      const top = (arr || []).slice(0, 2).map(c =>
+        `<span class="chip" style="border:1.5px solid ${color}; color:${color}; background:#fff;">${c.name} ${c.prob}%</span>`).join("");
+      return top ? `<div class="flex gap-10 items-center wrap" style="margin-bottom:10px;"><span class="chip" style="background:${color}; color:#fff;">${label}</span>${top || '<span class="muted small">该档暂无匹配，将自动并入邻档</span>'}</div>` : "";
+    };
+    pvEl.innerHTML = `
+      <div style="background:#f7f9ff; border:1px dashed #cddcff; border-radius:14px; padding:16px 18px;">
+        <b class="small text-brand">🔎 方案速览（点击下一步查看完整报告）</b>
+        ${bucket("🔴 冲", "#7b2ff7", pv.chong)}
+        ${bucket("🟢 稳", "#2a7cff", pv.wen)}
+        ${bucket("🟢 保", "#17a673", pv.bao)}
+      </div>`;
+  }
+  stepActions(body, {
+    nextLabel: "📊 在新窗口打开可视化报告",
+    back: true,
+    onNext: () => {
+      // 生成推荐数据并保存（报告页读取时会展平 result 字段）
+      const result = generatePlan();
+      localStorage.setItem("zhitu_plan_v1", JSON.stringify({ form, result, ts: Date.now() }));
+      const w = window.open("report.html?from=1", "_blank");
+      if (!w) toast("浏览器拦截了新窗口，请允许弹窗后重试");
+    }
+  });
+}
+
+/* ================= 推荐引擎（演示版） ================= */
+/*
+  模型说明（演示逻辑，非真实算法）：
+  - 库内院校 ref 分数视为「该校在录取竞争中的相对位置」（全国统一尺度，约 480~694）；
+  - 换算到考生所在省：该校演示录取线 schoolLine = 本省一段线 + (ref - 545)；
+    —— 即 ref≈545 的院校大致贴着本省一段线，ref 越高录取线越高（强省水涨船高，自洽）。
+  - 录取概率：prob = 50 + (score - schoolLine) * 3，夹在 [3, 97]；
+    分数高过录取线越多概率越高。
+  - 修正项：未选物理报理工科扣分、专业偏好匹配加分、家庭条件影响推荐倾向。
+*/
+function probOf(score, schoolLine, c, phys) {
+  let p = 50 + (score - schoolLine) * 3;
+  // 未选物理但院校偏硬核理工：降匹配度
+  if (!phys && (c.type === "理工" || /计算机|电子|通信|微电子|机械|电气/.test(c.tags.join("")))) p -= 22;
+  // 偏好匹配加分
+  const prefs = Array.isArray(form.pref.major) ? form.pref.major : [];
+  const tagStr = (c.tags || []).join("") + (c.type || "") + (c.name || "");
+  if (prefs.some(x => tagStr.includes(x.replace("类", "").replace("方向", "").slice(0, 2)) || c.name.includes(x.replace("类", "").slice(0, 2)))) p += 6;
+  return Math.max(3, Math.min(97, Math.round(p)));
+}
+
+function cityPass(c) {
+  const city = form.pref.city;
+  if (!city || city === "不限") return true;
+  const yx = ["北京", "上海", "广东"];                       // 一线
+  const newYx = ["江苏", "浙江", "四川", "湖北", "陕西", "重庆", "天津", "山东", "湖南", "安徽", "福建", "辽宁", "河南", "河北"]; // 新一线/强省会
+  if (city === "一线城市") return yx.includes(c.prov);
+  if (city === "新一线") return yx.includes(c.prov) || newYx.includes(c.prov);
+  if (city === "省会城市") return true; // 演示：全部近似为城市内高校
+  if (city === "离家近") return c.prov === form.prov;
+  return true;
+}
+
+function generatePlan() {
+  const prov = PROVINCES[form.prov];
+  const phys = form.subjects.includes("物理");
+  const line = phys ? prov.specialLineP : prov.specialLineH;
+  const score = form.score;
+  const scoreDiff = score - line;
+  const isPoor = (form.pref.family || "").includes("困难");
+  const isGrad = form.pref.goal === "考研深造";
+
+  const buckets = { chong: [], wen: [], bao: [] };
+  COLLEGES.forEach(c => {
+    if (!cityPass(c)) return;
+    const schoolLine = line + (c.ref - 545);
+    let prob = probOf(score, schoolLine, c, phys);
+    // 困难家庭：倾向就业确定性的师范/医学/计算机/财经（保就业导向），给轻微加成不影响分档太多
+    if (isPoor && /师范|医药|计算机|财经/.test(c.type + c.tags.join(""))) prob += 4;
+    if (isGrad && c.level === "985") prob += 4; // 深造偏好：985 平台加成
+    prob = Math.max(3, Math.min(97, prob));
+    const item = { ...c, prob, gap: Math.round(schoolLine - score) };
+    if (prob >= 72) buckets.bao.push(item);
+    else if (prob >= 45) buckets.wen.push(item);
+    else buckets.chong.push(item);
+  });
+
+  // 各档按「概率距离中间带」排序，尽量在档内靠近但清晰
+  const nearCenter = (arr) => arr.sort((a, b) => Math.abs(a.prob - 60) - Math.abs(b.prob - 60));
+  nearCenter(buckets.chong);
+  nearCenter(buckets.wen);
+  nearCenter(buckets.bao);
+
+  const take = (arr, n) => arr.slice(0, n);
+  // 若某档不足 4 个，从邻档借用并保证仍呈现冲/稳/保含义
+  const chong = take(buckets.chong, 4);
+  const wen = take(buckets.wen, 4);
+  const bao = take(buckets.bao, 4);
+  const borrow = (target, src, n) => { while (target.length < n && src.length) target.push(src.shift()); };
+  borrow(chong, buckets.wen, 4);
+  borrow(wen, buckets.bao, 4);
+  borrow(bao, buckets.chong, 4);   // 兜底若 chong 借空了也没有关系
+
+  // 专业推荐：按选科+偏好 + 就业确定性的规则推荐（演示）
+  const physBased = phys ? [
+    { name: "计算机科学与技术", why: "就业面最宽、薪资上限高，普通家庭性价比之选", match: 96 },
+    { name: "电气工程及其自动化", why: "进电网稳定，工科里确定性最强", match: 93 },
+    { name: "电子信息工程", why: "卡脖子领域人才缺口大", match: 91 },
+    { name: "临床医学", why: "铁饭碗属性，越老越吃香（需长线投入）", match: 88 },
+    { name: "自动化", why: "智能制造转型核心，考研后价值翻倍", match: 86 }
+  ] : [
+    { name: "汉语言文学(师范)", why: "考编当老师，文科最优稳定出口", match: 93 },
+    { name: "法学", why: "考公法检岗位多，需拼名校或深造", match: 85 },
+    { name: "会计学", why: "实用性强，考下CPA就业有保障", match: 88 },
+    { name: "财政学", why: "税务系统考公对口", match: 84 },
+    { name: "网络与新媒体", why: "内容产业技能型岗位", match: 78 }
+  ];
+  const majorRecs = physBased.map(x => ({ ...x, id: x.name }));
+
+  return {
+    ts: Date.now(),
+    province: { short: form.prov, full: form.provFull, line, gaokao: prov.gaokao },
+    subjects: form.subjects,
+    phys,
+    score,
+    estimate: form.isEstimate,
+    scoreDiff,
+    pref: form.pref,
+    chong, wen, bao,
+    majorRecs,
+    conclusion: buildConclusion(phys, scoreDiff, form, isPoor)
+  };
+}
+
+function buildConclusion(phys, scoreDiff, f, isPoor) {
+  let a = "";
+  if (isPoor) a += "你提到家庭条件需要尽快就业，本方案已倾向「就业确定性优先」：冲稳保三档均以就业面宽、可迁移的专业为主，慎选需要漫长深造才能兑现的冷门方向。";
+  else if (f.pref.goal === "考研深造") a += "你目标是考研深造，方案在「稳/保」档多保留 985/211 平台院校——深造更看重学校平台与学风，专业匹配度其次。";
+  else if (f.pref.goal === "考公进体制") a += "你倾向考公进体制，建议优先报考法学、财政学、计算机、汉语言等「考公友好专业」，并关注目标省份选调生院校名单。";
+  else a += "你计划本科毕业后直接就业，方案以「专业就业面+城市机会密度」为优先：理工看专业壁垒，文科看学校平台。";
+
+  const seg = scoreDiff >= 40 ? "你处在「顶尖竞争段」，选择面最广，但仍要克制冲名校冷门专业的冲动，防止滑档。" :
+    scoreDiff >= 10 ? "你处在「重点本科段」，冲稳保结构最健康：敢冲好平台，保底要扎实。" :
+    scoreDiff >= -15 ? "你处在「压线段」，务必把保底志愿填厚，避免整体滑到下一批次。" :
+    "你距一段线还有距离，建议重点关注「征集志愿、专科提前批与职业本科」，先上车再换道。";
+  return a + seg;
+}
+
+goto(0);
+</script>
+</body>
+</html>

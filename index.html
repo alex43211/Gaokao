@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恩卓智选 · 高考志愿智能规划平台</title>
+<meta name="description" content="基于就业视角的高考志愿规划平台：全国高校地图、本科专业百科、AI 志愿模拟填报、可视化分析报告。">
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="hero-eyebrow">🧭 选择比努力更重要 · 以就业视角倒推志愿</span>
+        <h1>分数只决定起点，<br><span class="hl">选择决定你能走多远</span></h1>
+        <p class="hero-sub">
+          高考志愿，是多数普通家庭孩子人生的第一次重大决策。
+          我们帮你把「专业、院校、城市、就业」放到同一张桌子上，
+          用数据而不是感觉，做一次不后悔的选择。
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-brand" href="plan.html">🚀 开始 AI 模拟填报</a>
+          <a class="btn btn-ghost" href="majors.html">📚 先查专业百科</a>
+        </div>
+        <div class="hero-trust">
+          <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
+          <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
+          <div class="t"><div><b>100+</b><span>院校志愿推荐库</span></div></div>
+          <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="mini-stat-row">
+            <div class="mini-stat"><b>物理 620</b><span>浙江 · 模拟填报</span></div>
+            <div class="mini-stat"><b>稳</b><span>录取概率 82%</span></div>
+            <div class="mini-stat"><b>3 档</b><span>冲稳保策略</span></div>
+          </div>
+          <div id="heroMiniMap" class="hero-mini-map"></div>
+        </div>
+        <div class="float-chip fc1">📈 推荐计算机类 · 就业率 96%</div>
+        <div class="float-chip fc2">🎯 城市优先 · 杭州就业机会密度 +38%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 功能入口 ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div class="tag">CORE FEATURES</div>
+      <h2>四大核心工具，陪你把志愿填明白</h2>
+      <p>从「看」到「聊」到「填」再到「报告」，一站式完成志愿决策闭环</p>
+    </div>
+    <div class="grid g4">
+      <a class="feat-card" href="map.html">
+        <span class="num">01</span>
+        <div class="ico ib-brand">🗺️</div>
+        <h3>全国高校地图</h3>
+        <p>34 个省市区数据一图尽览：悬停看概览，点击进省份，高校·分数线·考生数全掌握。</p>
+        <span class="go">进入地图 →</span>
+      </a>
+      <a class="feat-card" href="majors.html">
+        <span class="num">02</span>
+        <div class="ico ib-green">📚</div>
+        <h3>本科专业百科</h3>
+        <p>875 个本科专业全收录（对照教育部 2026 目录），其中 65 个热门专业含课程、就业、薪资、AI 冲击深度解读与「择校视角」犀利点评。</p>
+        <span class="go">查专业 →</span>
+      </a>
+      <a class="feat-card" href="plan.html">
+        <span class="num">03</span>
+        <div class="ico ib-accent">🧮</div>
+        <h3>AI 志愿模拟填报</h3>
+        <p>输入省份、选科、分数与偏好，智能生成「冲稳保」三档院校志愿方案。</p>
+        <span class="go">模拟填报 →</span>
+      </a>
+      <a class="feat-card" href="report.html?demo=1">
+        <span class="num">04</span>
+        <div class="ico ib-gold">📊</div>
+        <h3>可视化分析报告</h3>
+        <p>生成专属填报报告：录取概率、专业匹配、风险提示，可打印可分享，家长学生一起看。</p>
+        <span class="go">查看样例 →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 小艾专区 ===== -->
+<section class="section alt" id="about">
+  <div class="container">
+    <div class="grid g2" style="align-items:center; gap:44px;">
+      <div>
+        <div class="section-head" style="text-align:left; margin:0 0 22px;">
+          <div class="tag">AI MENTOR</div>
+          <h2>小艾同学，懂志愿的 AI 助手</h2>
+        </div>
+        <p style="color:var(--ink-2); line-height:1.9;">
+          每个页面右下角都有一位「小艾」。她懂高考志愿、懂专业就业、懂普通家庭的纠结——
+          她用「就业倒推」帮你判断专业，「家庭背景分流」帮你量体裁衣，
+          「城市优先」帮你放大分数价值，还会毫不客气地提醒你哪些坑别踩。
+        </p>
+        <div class="mt-16 flex wrap gap-10">
+          <span class="chip">👩‍🎓 24小时在线</span>
+          <span class="chip green">🎯 就业视角</span>
+          <span class="chip gold">📊 数据支撑</span>
+          <span class="chip purple">💬 敢说真话</span>
+        </div>
+        <button class="btn btn-brand mt-24" id="openChatBtn">💬 现在就和 小艾 聊聊</button>
+      </div>
+      <div class="card" style="padding: 26px;">
+        <h3 style="display:flex; align-items:center; gap:8px;">🗨️ 与小艾的一段对话</h3>
+        <div class="mt-16 chat-msg bot" style="max-width:100%;">“孩子 560 分河南考生，想学金融怎么看？”</div>
+        <div class="mt-10 chat-msg user" style="max-width:100%; background:var(--brand); color:#fff;">停！先问：家里是做金融的吗？不是的话，560 河南大概率去双非学金融，毕业跟 985 抢岗拿什么抢？这个分数我更建议计算机或电气——理工科选专业，一门手艺比一张文凭实在。</div>
+        <div class="mt-10 flex wrap gap-10">
+          <span class="chip">为什么这样建议？</span>
+          <span class="chip green">就业倒推法</span>
+          <span class="chip gold">家庭背景分流</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 方法论 ===== -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <div class="tag">METHODOLOGY</div>
+      <h2>志愿填报四步法</h2>
+      <p>不玄学、不拍脑袋，一套可执行的决策框架</p>
+    </div>
+    <div class="grid g4">
+      <div class="card hoverable">
+        <div class="icon-bubble ib-red">1️⃣</div>
+        <h3>问家庭</h3>
+        <p>家里有没有行业资源？能支持多长的求学周期？有矿和没矿，答案完全不同——先分流再决策。</p>
+      </div>
+      <div class="card hoverable">
+        <div class="icon-bubble ib-brand">2️⃣</div>
+        <h3>看就业</h3>
+        <p>不看宣传册，看这个专业中间 50% 毕业生 5 年后的真实去向与薪资中位数。就业倒推选专业。</p>
+      </div>
+      <div class="card hoverable">
+        <div class="icon-bubble ib-green">3️⃣</div>
+        <h3>选城市</h3>
+        <p>同等分数下，优先发达城市。城市决定思维、资源与机会密度，是分数的隐形放大器。</p>
+      </div>
+      <div class="card hoverable">
+        <div class="icon-bubble ib-gold">4️⃣</div>
+        <h3>拉梯度</h3>
+        <p>冲、稳、保三档拉开梯度，平行志愿把最想去的排前面，避免滑档与高分低就。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 热门专业速览 ===== -->
+<section class="section alt">
+  <div class="container">
+    <div class="section-head">
+      <div class="tag">HOT MAJORS</div>
+      <h2>大家都在问的专业</h2>
+      <p>点击卡片查看完整解读</p>
+    </div>
+    <div class="grid g3" id="hotMajors"></div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section" style="padding: 40px 0 80px;">
+  <div class="container">
+    <div class="card text-center" style="padding: 46px 30px; background:linear-gradient(135deg,#1d2b64,#2456e6); border:none; color:#fff;">
+      <h2 style="color:#fff; font-size:26px;">别让十几年的努力，输在最后一哆嗦</h2>
+      <p style="color:rgba(255,255,255,.85); margin:14px 0 26px; font-size:15px;">2 分钟输入省份、选科、分数，免费生成你的专属志愿方案</p>
+      <a class="btn" style="background:#fff; color:#2456e6;" href="plan.html">🎯 立即生成我的志愿方案</a>
+    </div>
+  </div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("home");
+document.getElementById("openChatBtn").addEventListener("click", () => {
+  const fab = document.getElementById("xiaoai-fab");
+  if (fab) fab.click();
+});
+
+/* 首页迷你地图（ECharts 全国填充） */
+(function () {
+  const el = document.getElementById("heroMiniMap");
+  if (!el || typeof echarts === "undefined") return;
+  const chart = echarts.init(el);
+  if (window.CHINA_GEO) echarts.registerMap("china", window.CHINA_GEO);
+  const list = [];
+  Object.keys(PROVINCES).forEach(k => {
+    const p = PROVINCES[k];
+    if (p.region === "台港澳") return;
+    list.push({ name: p.full, value: p.candidates });
+  });
+  chart.setOption({
+    tooltip: { show: false },
+    visualMap: { show: false, min: 0, max: 140, inRange: { color: ["#dce7ff", "#5b7cff"] } },
+    series: [{
+      type: "map", map: "china", roam: false, zoom: 1.18,
+      label: { show: false },
+      itemStyle: { borderColor: "#fff", borderWidth: 1, areaColor: "#e3ebff" },
+      emphasis: { label: { show: false }, itemStyle: { areaColor: "#5b7cff" } },
+      data: list
+    }]
+  });
+  window.addEventListener("resize", () => chart.resize());
+})();
+
+/* 热门专业渲染 */
+(function () {
+  const box = document.getElementById("hotMajors");
+  if (!box) return;
+  const picks = ["计算机科学与技术", "临床医学", "电气工程及其自动化", "人工智能", "口腔医学", "金融学"].map(n => MAJORS.find(m => m.name === n)).filter(Boolean);
+  box.innerHTML = picks.map(m => `
+    <a class="card hoverable" href="majors.html?q=${encodeURIComponent(m.name)}" style="display:block;color:inherit;cursor:pointer;">
+      <div class="flex between items-center">
+        <h3>${m.name}</h3>
+        <span class="chip ${m.rating >= 4 ? "green" : m.rating === 3 ? "gold" : "red"}">${m.rating >= 4 ? "推荐" : m.rating === 3 ? "看情况" : "谨慎"}</span>
+      </div>
+      <p class="muted small mb-8">${m.cat} · ${m.sub}｜${m.req}</p>
+      <p>${m.intro.slice(0, 46)}…</p>
+      <div class="mt-10">
+        <span class="chip">💰 ${m.salary}/月</span>
+        <span class="chip gold">AI ${m.aiRisk.includes("低") ? "低冲击" : m.aiRisk.includes("高") ? "高冲击" : "中冲击"}</span>
+      </div>
+    </a>`).join("");
+})();
+</script>
+</body>
+</html>

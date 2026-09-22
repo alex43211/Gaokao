@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本科专业百科 · 恩卓智选</title>
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb">首页 / 本科专业百科</div>
+    <h1>📚 本科专业百科</h1>
+    <p>对照教育部《普通高等学校本科专业目录（2026年）》收录 <b>875 个本科专业</b>（覆盖全部学科门类，含交叉学科），其中 60+ 热门专业配有课程、就业、薪资、AI 冲击深度解读与择校点评。<b>点击卡片查看详情</b>。</p>
+  </div>
+</section>
+
+<section class="container">
+  <div class="filter-bar" style="margin-top:26px;">
+    <div class="search-row">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input id="searchInput" placeholder="搜索专业名称，如：计算机、临床、法学…">
+      </div>
+      <button class="btn btn-brand" id="clearBtn" style="display:none;">清除</button>
+    </div>
+    <div class="filter-tags" id="catTags"></div>
+  </div>
+  <div id="majorGrid" class="grid g3"></div>
+  <div class="flex items-center gap-10 mt-24" id="moreBox" style="display:none; justify-content:center;">
+    <button class="btn btn-ghost" id="moreBtn">⬇️ 加载更多（<span class="cnt"></span>）</button>
+  </div>
+  <div id="emptyBox" class="empty-state" style="display:none">
+    <div class="big">🔎</div>
+    <p>没有找到匹配的专业，换个关键词试试？也可以问问小艾 🤖</p>
+  </div>
+</section>
+
+<!-- 专业详情弹窗 -->
+<div class="modal-mask" id="majorModal">
+  <div class="modal" style="position:relative;">
+    <button class="close-x" id="modalClose">✕</button>
+    <div id="modalBody"></div>
+    <div class="flex between items-center mt-16" style="padding-top:16px;border-top:1px dashed var(--line);">
+      <button class="btn btn-ghost" id="modalAsk">💬 问小艾这个专业</button>
+      <a class="btn btn-brand" id="modalPlan" href="plan.html">🎯 用这个专业方向模拟填报</a>
+    </div>
+  </div>
+</div>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("majors");
+
+/* 分类标签 */
+(function () {
+  const cats = Object.keys(MAJOR_CATS);
+  const box = document.getElementById("catTags");
+  box.innerHTML = `<button class="ft on" data-cat="全部">全部 (${MAJORS.length})</button>` +
+    cats.map(c => `<button class="ft" data-cat="${esc(c)}">${c} (${MAJOR_CATS[c].length})</button>`).join("");
+  box.querySelectorAll(".ft").forEach(b => b.addEventListener("click", () => {
+    box.querySelectorAll(".ft").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    state.cat = b.dataset.cat;
+    render();
+  }));
+})();
+
+const state = { cat: "全部", q: "", limit: 60 };
+
+const PAGE_STEP = 60;
+function render() {
+  const grid = document.getElementById("majorGrid");
+  const empty = document.getElementById("emptyBox");
+  const moreBox = document.getElementById("moreBox");
+  let list = MAJORS.slice();
+  if (state.cat !== "全部") list = list.filter(m => m.cat === state.cat);
+  if (state.q) {
+    const q = state.q;
+    list = list.filter(m => m.name.includes(q) || (m.sub || "").includes(q) ||
+      (m.cat || "").includes(q) || (m.code || "").includes(q) ||
+      (m.tags || []).some(t => t.includes(q)) || (m.jobs || []).some(j => j.includes(q)) ||
+      (m.spec || []).some(s => s.includes(q)));
+  }
+  empty.style.display = list.length ? "none" : "block";
+  grid.style.display = list.length ? "grid" : "none";
+  // 按门类排序保持分组感
+  const catOrder = Object.keys(MAJOR_CATS);
+  list.sort((a, b) => (catOrder.indexOf(a.cat) - catOrder.indexOf(b.cat)) || (a.code > b.code ? 1 : -1));
+  const visible = list.slice(0, state.limit);
+  const total = list.length;
+  grid.innerHTML = visible.map(m => {
+    const isCat = m.catOnly === true;
+    const specStr = (m.spec && m.spec.length) ? ` · ${m.spec.join("/")}专业` : "";
+    const rate = !isCat ? (m.rating >= 4 ? ["green", "推荐"] : m.rating === 3 ? ["gold", "看情况"] : ["red", "谨慎"]) : ["gray", "目录建档"];
+    const ai = !isCat ? (m.aiRisk.includes("低") ? ["green", "低"] : m.aiRisk.includes("高") ? ["red", "高"] : ["gold", "中"]) : ["gray", "—"];
+    return `
+    <div class="major-card" data-id="${m.id}">
+      <div class="top">
+        <div>
+          <h3>${m.name}</h3>
+          <div class="cat">${m.code}${specStr} · ${m.cat} / ${m.sub || "—"}</div>
+        </div>
+        <span class="chip ${rate[0]}">${rate[1]}</span>
+      </div>
+      <p class="desc">${isCat ? `收录于《普通高等学校本科专业目录（2026年）》，${m.cat}门类·${m.sub || "相关专业类"}。授予${m.degree}，${m.req}。` : m.intro}</p>
+      <div class="major-meta">
+        <span>学制 <b>${m.years}年</b></span>
+        <span>授予 <b>${m.degree}</b></span>
+        <span>选科 <b>${m.req}</b></span>
+      </div>
+      <div class="major-meta">
+        <span>${isCat ? "📜 " + (m.spec && m.spec.length ? m.spec.join(" · ") : "基本专业") : "💼 演示起薪 <b>" + m.salary + "</b>"}</span>
+        <span>${isCat ? "🌱 官方目录收录" : "🤖 AI冲击 <b class='text-" + (ai[0] === "green" ? "green" : ai[0] === "red" ? "red" : "accent") + "'>" + ai[1] + "</b>"}</span>
+      </div>
+      <div class="mj-tags">${(isCat ? ["2026目录"] : m.tags.slice(0, 3)).map(t => `<span class="chip gray">${t}</span>`).join("")}</div>
+    </div>`;
+  }).join("");
+  if (moreBox) {
+    moreBox.style.display = total > state.limit ? "flex" : "none";
+    moreBox.querySelector(".cnt").textContent = `还有 ${total - state.limit} 个专业未展示`;
+  }
+  grid.querySelectorAll(".major-card").forEach(c => c.addEventListener("click", () => openMajor(c.dataset.id)));
+}
+
+/* 打开详情 */
+function openMajor(id) {
+  const m = MAJORS.find(x => x.id === id);
+  if (!m) return;
+  const isCat = m.catOnly === true;
+  const specStr = (m.spec && m.spec.length) ? m.spec.join(" / ") : (isCat ? "基本专业" : "");
+  if (isCat) {
+    // —— 目录建档条目（无深度文案）——
+    document.getElementById("modalBody").innerHTML = `
+      <div class="flex between items-center wrap gap-10 mb-16">
+        <div>
+          <h2 style="margin:0">${m.name}</h2>
+          <div class="muted mt-8 small">${m.code} · ${m.cat} / ${m.sub || "—"} · 学制 ${m.years} 年 · ${m.degree}</div>
+        </div>
+        <span class="chip gray">📜 目录建档</span>
+      </div>
+      <div class="report-card" style="margin:0 0 16px; box-shadow:none; border-radius:14px; padding:22px; background:linear-gradient(135deg,#f6f8ff,#fff);">
+        <b style="font-size:15px;">🏛️ ${m.name}（${m.code}）</b>
+        <p class="small mt-10" style="color:var(--ink-2); line-height:1.9;">
+          本专业收录于教育部《普通高等学校本科专业目录（2026年）》，
+          属<b>${m.cat}</b>学科门类 · <b>${m.sub || "相关专业类"}</b>。
+          授予<b>${m.degree}</b>，基本修业年限 ${m.years} 年。
+        </p>
+        <div class="mt-16 flex wrap gap-10">
+          <span class="chip">学制 ${m.years} 年</span>
+          <span class="chip gold">授予 ${m.degree}</span>
+          <span class="chip green">建议选科：${m.req}</span>
+          ${(m.spec || []).map(s => `<span class="chip purple">${s}专业</span>`).join("")}
+        </div>
+        <div class="mt-16 demo-note" style="background:#fff;">
+          ✨ 深度解读（课程 / 就业 / 薪资 / AI 冲击 / 择校点评）正在陆续补全。
+          当前可点下方「问小艾这个专业」，让 AI 顾问结合同类专业与就业框架给你参考。
+        </div>
+      </div>`;
+  } else {
+    const rate = m.rating >= 4 ? ["🟢", "推荐"] : m.rating === 3 ? ["🟡", "看情况"] : ["🔴", "谨慎"];
+    document.getElementById("modalBody").innerHTML = `
+    <div class="flex between items-center wrap gap-10 mb-16">
+      <div>
+        <h2 style="margin:0">${m.name}</h2>
+        <div class="muted mt-8 small">${m.code} · ${m.cat} / ${m.sub} · 学制 ${m.years} 年 · ${m.degree}</div>
+      </div>
+      <span class="chip ${m.rating >= 4 ? "green" : m.rating === 3 ? "gold" : "red"}">${rate[0]} 择校推荐度：${rate[1]}</span>
+    </div>
+    <div class="report-card" style="margin:0 0 16px; box-shadow:none; border-radius:14px; padding:20px;">
+      <p style="color:var(--ink-2); line-height:1.9;">${m.intro}</p>
+      <div class="grid g2 mt-16" style="gap:14px;">
+        <div style="background:var(--bg);border-radius:12px;padding:14px;">
+          <b class="small">📚 主干课程</b>
+          <p class="small mt-8" style="color:var(--ink-2); line-height:1.8;">${m.courses.join("、")}</p>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:14px;">
+          <b class="small">💼 典型就业去向</b>
+          <p class="small mt-8" style="color:var(--ink-2); line-height:1.8;">${m.jobs.join("、")}</p>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:14px;">
+          <b class="small">💰 演示起薪</b>
+          <p class="mt-8"><b class="text-brand" style="font-size:19px;">${m.salary}</b> <span class="muted small">/月（演示值）</span></p>
+        </div>
+        <div style="background:var(--bg);border-radius:12px;padding:14px;">
+          <b class="small">📈 行业趋势</b>
+          <p class="small mt-8" style="color:var(--ink-2);">${m.trend}</p>
+        </div>
+      </div>
+    </div>
+    <div class="report-card" style="margin:0 0 16px; box-shadow:none; background:linear-gradient(135deg,#fff7f2,#fff); border-color:#ffe3d6; border-radius:14px; padding:20px;">
+      <b class="text-accent">🎙️ 择校视角点评</b>
+      <p style="color:var(--ink); margin-top:8px; line-height:1.9;">${m.zxf}</p>
+      <div class="mt-10 flex wrap gap-10">
+        <span class="chip">选科要求：${m.req}</span>
+        <span class="chip gold">AI 冲击：${m.aiRisk}</span>
+        ${m.tags.map(t => `<span class="chip gray">${t}</span>`).join("")}
+      </div>
+    </div>`;
+  }
+  document.getElementById("majorModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  document.getElementById("modalAsk").onclick = () => {
+    const fab = document.getElementById("xiaoai-fab");
+    if (fab) {
+      closeModal();
+      fab.click();
+      setTimeout(() => {
+        const inp = document.getElementById("xiaoai-input");
+        if (inp) { inp.value = m.name + "这个专业怎么样？"; inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" })); }
+      }, 400);
+    }
+  };
+}
+
+function closeModal() {
+  document.getElementById("majorModal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("majorModal").addEventListener("click", e => { if (e.target.id === "majorModal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+/* URL 参数直达 */
+(function () {
+  const q = decodeURIComponent(window.qs("q"));
+  if (q) {
+    state.q = q;
+    document.getElementById("searchInput").value = q;
+    document.getElementById("clearBtn").style.display = "";
+    const m = MAJORS.find(x => x.name === q);
+    if (m) {
+      // 跳到对应卡片打开详情
+      render();
+      openMajor(m.id);
+    }
+  }
+  document.getElementById("searchInput").addEventListener("input", e => {
+    state.q = e.target.value.trim();
+    state.limit = PAGE_STEP;
+    document.getElementById("clearBtn").style.display = state.q ? "" : "none";
+    render();
+  });
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    state.q = "";
+    state.limit = PAGE_STEP;
+    document.getElementById("searchInput").value = "";
+    document.getElementById("clearBtn").style.display = "none";
+    render();
+  });
+})();
+
+document.getElementById("moreBtn").addEventListener("click", () => {
+  state.limit += PAGE_STEP;
+  render();
+});
+render();
+</script>
+</body>
+</html>

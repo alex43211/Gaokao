@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>志愿填报分析报告 · 恩卓智选</title>
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<div class="report-shell" id="reportRoot"></div>
+
+<!-- 打印悬浮按钮 -->
+<div class="print-btn no-print" id="printBar" style="display:none">
+  <button class="btn btn-brand" onclick="window.print()">🖨️ 打印 / 存为 PDF</button>
+</div>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("report");
+const isDemo = window.qs("demo") === "1";
+
+/* 若无数据且非 demo，引导回填报页 */
+if (!isDemo && !localStorage.getItem("zhitu_plan_v1")) {
+  document.getElementById("reportRoot").innerHTML = `
+    <div class="report-cover" style="text-align:center; padding:70px 40px;">
+      <div style="font-size:64px;">📭</div>
+      <h1 style="margin-top:14px;">还没有填报数据</h1>
+      <p style="opacity:.85; margin:14px 0 26px;">请先完成「AI 志愿模拟填报」，再在这里查看你的专属可视化报告。</p>
+      <a class="btn" style="background:#fff; color:#2456e6;" href="plan.html">🎯 去模拟填报</a>
+    </div>`;
+} else {
+  let raw;
+  try { raw = isDemo ? demoData() : JSON.parse(localStorage.getItem("zhitu_plan_v1")); } catch (e) { raw = null; }
+  if (!raw) {
+    document.getElementById("reportRoot").innerHTML = `
+      <div class="report-cover" style="text-align:center; padding:70px 40px;">
+        <div style="font-size:64px;">📭</div>
+        <h1 style="margin-top:14px;">没有可用的填报数据</h1>
+        <p style="opacity:.85; margin:14px 0 26px;">请先完成「AI 志愿模拟填报」，再生成可视化报告。</p>
+        <a class="btn" style="background:#fff; color:#2456e6;" href="plan.html">🎯 去模拟填报</a>
+      </div>`;
+  } else {
+    // 非 demo：展平存储结构 { form, result, ts }
+    const data = isDemo ? raw : Object.assign({}, raw.result, { form: raw.form, ts: raw.ts || Date.now(), demo: false });
+    if (isDemo) document.getElementById("printBar").style.display = "";
+    renderReport(data);
+  }
+}
+
+/* ---------- 演示样例数据（供首页"查看样例"直达） ---------- */
+function demoData() {
+  const prov = PROVINCES["浙江"];
+  const line = prov.specialLineP;
+  const score = 622;
+  const buckets = { chong: [], wen: [], bao: [] };
+  // 手工挑选演示
+  const pick = (ids) => ids.map(id => COLLEGES.find(c => c.id === id)).filter(Boolean);
+  const chongIds = ["S01", "Z01", "S02", "G01"];   // 复旦/浙大/上交/中山 → 冲
+  return {
+    ts: Date.now(),
+    form: {
+      provFull: "浙江省", prov: "浙江", subjects: ["物理", "化学", "生物"], phys: true,
+      score, estimate: false, pref: { major: ["计算机类"], city: "新一线", family: "普通工薪家庭", goal: "考研深造" }
+    },
+    demo: true,
+    chong: pick(chongIds).map(c => ({ ...c, prob: 30 })),
+    wen: pick(["S03", "J01", "J02", "H02"]).map(c => ({ ...c, prob: 55 })),   // 同济/南大/东南/华科 → 稳
+    bao: pick(["H03", "SC03", "EC01", "NOR03"]).map(c => ({ ...c, prob: 84 })), // 武理工/西财/上外贸/南邮 → 保
+    majorRecs: [
+      { name: "计算机科学与技术", why: "就业面最宽、薪资上限高，普通家庭性价比之选", match: 96 },
+      { name: "软件工程", why: "上手快、就业周期短，工程化应用型", match: 94 },
+      { name: "人工智能", why: "本科入门需深造，建议作为研究生方向", match: 90 },
+      { name: "电子信息工程", why: "卡脖子领域人才缺口大", match: 92 }
+    ],
+    conclusion: "你处在「重点本科段」，冲稳保结构最健康。物理+化学+生物选科覆盖全部理工医专业，你的方案以计算机类为核心主线，稳保两档兼顾院校平台——既保证专业就业面，又为考研深造保留 985/211 平台跳板。"
+  };
+}
+
+/* ================= 报告渲染 ================= */
+function renderReport(data) {
+  const { form, chong, wen, bao, majorRecs } = data;
+  const isDemo = data.demo;
+  const prov = isDemo ? PROVINCES[form.prov] : data.province && PROVINCES[data.province.short] || PROVINCES[form.prov];
+  const line = (data.province && data.province.line) || (prov && (form.phys ? prov.specialLineP : prov.specialLineH));
+  const score = form.score;
+  const diff = score - line;
+  const dateStr = new Date(data.ts || Date.now()).toLocaleDateString("zh-CN");
+
+  // 位次换算（演示模型）
+  let rankHtml = "";
+  try {
+    if (window.XIAOAI && window.XIAOAI.estimateRank && prov) {
+      const est = window.XIAOAI.estimateRank(prov.name, score);
+      if (est) {
+        const provShortName = prov.name || form.prov;
+        rankHtml = `
+      <div class="report-card">
+        <h2><span class="em">📏</span> 位次换算 · 省内竞争定位 <span class="chip gray">演示估算</span></h2>
+        <div class="report-grid" style="grid-template-columns:repeat(4,1fr);">
+          <div class="rkpi"><div class="l">估算全省位次</div><div class="v" style="font-size:24px;">${est.rank.toLocaleString("zh-CN")}</div><div class="d">约全省第 ${est.rank.toLocaleString("zh-CN")} 名</div></div>
+          <div class="rkpi ok"><div class="l">超过考生比例</div><div class="v">${est.pctOver}<small>%</small></div><div class="d">演示模型估算</div></div>
+          <div class="rkpi ${est.diff >= 0 ? "ok" : "danger"}"><div class="l">高出参考线</div><div class="v">${est.diff > 0 ? "+" : ""}${est.diff}<small>分</small></div><div class="d">${provShortName} 物理一段线 ${est.line}</div></div>
+          <div class="rkpi warn"><div class="l">本省考生规模</div><div class="v">${prov.candidates}<small>万</small></div><div class="d">普通高校约 ${prov.univs} 所</div></div>
+        </div>
+        <div class="mt-16" style="height:14px; background:#eef1f7; border-radius:999px; overflow:hidden;">
+          <div style="width:${Math.min(100, est.pctOver)}%; height:100%; background:linear-gradient(90deg,#2456e6,#17a673); border-radius:999px;"></div>
+        </div>
+        <div class="flex between small muted mt-8"><span>0%</span><span>你大约处于前 ${est.pctOver}% 区间 →</span></div>
+        <div class="mt-16 flex wrap gap-10">
+          ${(prov.hot || []).slice(0, 4).map(h => `<span class="chip">${h}</span>`).join("")}
+          <span class="chip green">💼 ${prov.industry || "—"}</span>
+        </div>
+        <p class="muted small mt-10">⚠️ 位次为演示模型估算（非真实一分一段数据）；正式填报请用省考试院《一分一段表》精准定位。</p>
+      </div>`;
+      }
+    }
+  } catch (e) { rankHtml = ""; }
+
+  const root = document.getElementById("reportRoot");
+  root.innerHTML = `
+  ${isDemo ? `<div class="demo-note no-print" style="margin-bottom:16px;">🧪 你正在查看<b>内置演示报告</b>（示例数据）。点击右上角「AI 志愿填报」填入自己的省份/选科/分数，可生成专属版本。</div>` : ""}
+  <!-- 封面 -->
+  <div class="report-cover">
+    <span class="cover-badge">🎓 恩卓智选 · 志愿分析报告</span>
+    <h1>高考志愿填报分析报告</h1>
+    <div class="meta">
+      <span>📍 省份 <b>${isDemo ? "浙江" : (data.province && data.province.full) || form.provFull || form.prov}</b></span>
+      <span>🧪 选科 <b>${form.subjects.join(" + ")}</b></span>
+      <span>🎯 分数 <b>${score} 分${form.estimate ? "（预估）" : ""}</b></span>
+      <span>📅 报告生成 <b>${dateStr}</b></span>
+    </div>
+    <div class="meta">
+      <span>💼 就业偏好 <b>${(form.pref.major || []).join("、") || "系统推荐"}</b></span>
+      <span>🏙️ 城市偏好 <b>${form.pref.city || "不限"}</b></span>
+      <span>🎯 发展目标 <b>${form.pref.goal || "未选择"}</b></span>
+      <span>👨‍👩‍👧 家庭情况 <b>${form.pref.family || "未选择"}</b></span>
+    </div>
+  </div>
+
+  <!-- 核心指标 -->
+  <div class="report-grid">
+    <div class="rkpi"><div class="l">分数 vs 一段线</div>
+      <div class="v ${diff >= 0 ? "ok" : "danger"}">${diff > 0 ? "+" : ""}${diff} <small>分</small></div>
+      <div class="d">参考线 ${line} 分（${form.phys ? "物理类" : "历史类"}，演示）</div></div>
+    <div class="rkpi ${chong.length ? "" : "warn"}"><div class="l">可冲院校</div>
+      <div class="v">${chong.length} <small>所</small></div><div class="d">录取概率约 ${chong.length ? Math.round(chong.reduce((s,c)=>s+c.prob,0)/chong.length) : 0}%</div></div>
+    <div class="rkpi ok"><div class="l">稳/保院校</div>
+      <div class="v">${wen.length + bao.length} <small>所</small></div>
+      <div class="d">稳 ${wen.length} 所 · 保 ${bao.length} 所</div></div>
+  </div>
+
+  ${rankHtml}
+
+  <!-- 冲稳保瀑布 -->
+  <div class="report-card">
+    <h2><span class="em">🌈</span> 冲稳保结构总览</h2>
+    <div class="waterfall">
+      <div class="wf-item"><div class="cnt chong">${chong.length}</div><div class="lbl">🔴 冲</div><div class="tip">搏更好的平台</div></div>
+      <div class="wf-item"><div class="cnt wen">${wen.length}</div><div class="lbl">🟢 稳</div><div class="tip">匹配度最高的基本盘</div></div>
+      <div class="wf-item"><div class="cnt bao">${bao.length}</div><div class="lbl">🟢 保</div><div class="tip">兜底防滑档</div></div>
+    </div>
+    <div id="wfChart" class="chart-box" style="height:280px"></div>
+  </div>
+
+  <!-- 专业推荐 -->
+  <div class="report-card">
+    <h2><span class="em">🎓</span> 专业方向推荐 <span class="chip gray">基于选科与偏好</span></h2>
+    <div id="majorRecBox"></div>
+  </div>
+
+  <!-- 冲 -->
+  ${bucketCard("chong", "🔴 冲刺院校", "录取希望相对较小，但值得一搏 —— 放在志愿表最前面", chong)}
+  <!-- 稳 -->
+  ${bucketCard("wen", "🟢 稳妥院校", "与你分数最匹配的基本盘 —— 志愿表的核心仓位", wen)}
+  <!-- 保 -->
+  ${bucketCard("bao", "🟢 保底院校", "确保不滑档的保险 —— 志愿表的最后防线", bao)}
+
+  <!-- 结论与提醒 -->
+  <div class="report-card" style="border-left: 5px solid var(--accent);">
+    <h2><span class="em">🧭</span> AI 规划师结论</h2>
+    <p style="color:var(--ink-2); line-height:2;">${data.conclusion || "暂无结论"}</p>
+    <div class="mt-16" style="background:#f6f8ff; border-radius:12px; padding:16px;">
+      <b class="text-brand small">⚠️ 风险与提醒</b>
+      <ul style="margin:10px 0 0 18px; color:var(--ink-2); font-size:13.5px; line-height:2;">
+        <li>平行志愿一轮投档，一旦投出不再补投，<b>「保」必须兜得住</b>，建议保留 2 所以上充分保底；</li>
+        <li>关注目标院校<b>专业录取规则</b>（分数清 / 专业清 / 级差），服从调剂务必谨慎判断；</li>
+        <li>本报告基于<b>演示数据</b>，请以省考试院《一分一段表》、目标院校近 3 年投档线为准；</li>
+        <li>建议 6 月下旬出分后，用小艾进行 1:1 复核，再微调冲稳保结构。</li>
+      </ul>
+    </div>
+  </div>`;
+
+  /* 院校卡片渲染辅助 */
+  function bucketCard(key, title, subtitle, list) {
+    if (!list || !list.length) return "";
+    const rows = list.map((c, i) => `
+      <div class="college-row">
+        <span class="cl-band ${key === "chong" ? "band-chong" : key === "wen" ? "band-wen" : "band-bao"}">${c.level}</span>
+        <div class="cl-info">
+          <h4>${c.name} <span class="muted" style="font-weight:600">· ${c.city}</span></h4>
+          <p>${c.type} · ${c.tags.slice(0, 2).join(" / ")}</p>
+        </div>
+        <div class="cl-chips" style="max-width:240px">${c.tags.slice(0, 3).map(t => `<span class="chip gray">${t}</span>`).join("")}</div>
+        <div class="cl-risk">
+          <div class="p" style="color:${c.prob >= 72 ? "var(--green)" : c.prob >= 45 ? "var(--brand)" : "var(--accent)"}">${c.prob}%</div>
+          <div class="lb">模拟录取概率</div>
+        </div>
+      </div>`).join("");
+    return `<div class="report-card">
+      <h2><span class="em">${title.split(" ")[0]}</span> ${title.split(" ").slice(1).join(" ")}</h2>
+      <p class="muted small" style="margin-top:-10px; margin-bottom:10px;">${subtitle}</p>
+      ${rows}
+    </div>`;
+  }
+
+  /* 专业推荐卡片 */
+  document.getElementById("majorRecBox").innerHTML = (majorRecs || []).slice(0, 4).map((m, i) => `
+    <div class="college-row">
+      <span style="flex-shrink:0; width:44px;height:44px;border-radius:12px;background:var(--brand-soft);display:grid;place-items:center;font-weight:900;color:var(--brand);">${i + 1}</span>
+      <div class="cl-info">
+        <h4>${m.name}</h4>
+        <p>${m.why || ""}</p>
+      </div>
+      <div class="cl-risk"><div class="p" style="color:var(--green)">${m.match || "–"}%</div><div class="lb">匹配度</div></div>
+    </div>`).join("") || "<p class='muted'>暂无推荐，可回到填报页调整偏好</p>";
+
+  /* 冲稳保概率可视化 */
+  const chartEl = document.getElementById("wfChart");
+  const chart = echarts.init(chartEl);
+  const bucketMap = { chong, wen, bao };
+  const cats = ["冲刺", "稳妥", "保底"];
+  const colors = ["#7b2ff7", "#2a7cff", "#17a673"];
+  const seriesData = cats.map((name, idx) => ({
+    name, type: "bar", barWidth: 56, itemStyle: { color: colors[idx], borderRadius: [8, 8, 0, 0] },
+    label: { show: true, position: "top", formatter: p => p.value + " 所", fontWeight: 800, color: "#1c2740" },
+    data: [["chong", "wen", "bao"][idx] === "chong" ? chong.length : ["chong", "wen", "bao"][idx] === "wen" ? wen.length : bao.length]
+  }));
+  chart.setOption({
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 30, right: 20, top: 40, bottom: 30 },
+    xAxis: { type: "category", data: cats, axisLine: { lineStyle: { color: "#dde3f0" } }, axisLabel: { fontSize: 13, fontWeight: 700, color: "#4a5878" } },
+    yAxis: { type: "value", minInterval: 1, splitLine: { lineStyle: { color: "#eef1f7" } }, axisLabel: { color: "#8a94ab" } },
+    series: seriesData
+  });
+
+  // 各档平均概率横向对比
+  const g2 = document.createElement("div");
+  g2.innerHTML = `<div class="report-card" style="margin-top:22px;"><h2><span class="em">📈</span> 各档平均录取概率</h2><div id="probChart" class="chart-box"></div></div>`;
+  root.appendChild(g2);
+  const pEl = document.getElementById("probChart");
+  const pc = echarts.init(pEl);
+  const avg = (arr) => arr.length ? Math.round(arr.reduce((s, c) => s + c.prob, 0) / arr.length) : 0;
+  const vals = [avg(chong), avg(wen), avg(bao)];
+  pc.setOption({
+    tooltip: { trigger: "axis" },
+    grid: { left: 34, right: 20, top: 30, bottom: 26 },
+    xAxis: { type: "category", data: cats, axisLabel: { color: "#4a5878", fontWeight: 700 } },
+    yAxis: { type: "value", min: 0, max: 100, splitLine: { lineStyle: { color: "#eef1f7" } }, axisLabel: { color: "#8a94ab", formatter: "{value}%" } },
+    series: [{
+      name: "平均录取概率",
+      type: "bar",
+      data: vals.map((v, i) => ({ value: v, itemStyle: { color: colors[i], borderRadius: [8, 8, 0, 0] } })),
+      barWidth: 60,
+      label: { show: true, position: "top", formatter: "{c}%", fontWeight: 800 }
+    }]
+  });
+
+  window.addEventListener("resize", () => { chart.resize(); pc.resize(); });
+}
+</script>
+</body>
+</html>

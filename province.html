@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>省份详情 · 恩卓智选</title>
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="prov-hero" id="provHero">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">首页</a> / <a href="map.html">全国地图</a> / <span id="crumbName">省份详情</span></div>
+    <h1 id="provName">加载中…</h1>
+    <div class="sub" id="provSub"></div>
+    <div class="kpi-band" id="kpiBand"></div>
+  </div>
+</section>
+
+<section class="prov-body">
+  <div class="container">
+    <!-- 院校列表 -->
+    <div class="report-card">
+      <h2><span class="em">🏫</span> 代表院校 · 择校雷达 <span class="chip gray ml-8">共 <span id="univTotal">0</span> 所（库内该省部分）</span></h2>
+      <div id="univList" class="mt-16"></div>
+      <div class="demo-note mt-16">院校参考档为<b>演示数据</b>，非真实录取分数线；完整填报请以省考试院当年《招生计划》与院校章程为准。</div>
+    </div>
+
+    <!-- 省份洞察 -->
+    <div class="grid g2" style="margin-top:22px;">
+      <div class="report-card" style="margin-bottom:0;">
+        <h2><span class="em">🧭</span> 择校视角 · 省情点评</h2>
+        <p id="provNote" style="color:var(--ink-2); line-height:2; font-size:14.5px;"></p>
+        <div class="mt-16">
+          <div class="form-label">🏭 优势产业 / 就业方向</div>
+          <p id="provIndustry" class="muted" style="font-size:13.8px;"></p>
+        </div>
+        <div class="mt-16">
+          <div class="form-label">🔥 本省考生关注专业</div>
+          <div id="provHot" class="flex wrap gap-10 mt-10"></div>
+        </div>
+      </div>
+      <div>
+        <div class="report-card" style="margin-bottom:16px;">
+          <h2><span class="em">📊</span> 与全国平均对比</h2>
+          <div class="stat-mini"><span>考生规模（演示·万）</span><span class="v" id="vsCand">–</span></div>
+          <div class="stat-mini"><span>高校密度（所/百万考生）</span><span class="v" id="vsDensity">–</span></div>
+          <div class="stat-mini"><span>双一流数量</span><span class="v" id="vsDl">–</span></div>
+          <div class="stat-mini"><span>考生规模全国排名（演示）</span><span class="v hot" id="vsRank">–</span></div>
+        </div>
+        <div class="report-card" style="margin-bottom:0;">
+          <h2><span class="em">🎯</span> 给小艾留个问题</h2>
+          <p class="muted small">结合本省情况，问小艾更具体的建议：</p>
+          <div class="flex wrap gap-10 mt-10" id="provChatQuick"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("map");
+
+function provinceOf(full) {
+  const short = window.shortName(full);
+  return PROVINCES[short] || null;
+}
+
+(function () {
+  const full = decodeURIComponent(window.qs("p")) || "浙江省";
+  const short = window.shortName(full);
+  const prov = provinceOf(full);
+  if (!prov) { document.body.innerHTML = "<h2 style='text-align:center;padding:80px'>未找到该省份数据</h2>"; return; }
+
+  document.title = prov.full + " · 高校数据 · 恩卓智选";
+  const hero = document.getElementById("provHero");
+  hero.style.background = "linear-gradient(130deg,#1d2b64,#2456e6)";
+  document.getElementById("crumbName").textContent = prov.full;
+  document.getElementById("provName").textContent = prov.full;
+  document.getElementById("provSub").textContent =
+    (prov.region === "台港澳" ? "特别地区" : "中国" + prov.region + "地区") + " · 省会/首府 " + prov.capital +
+    " · " + (prov.gaokao.includes("3+1+2") ? "新高考 3+1+2" : prov.gaokao.includes("3+3") ? "新高考 3+3" : prov.gaokao) +
+    (prov.region === "台港澳" ? " · 数据为示意" : "");
+
+  const kpis = [
+    { label: "考生规模(演示)", value: prov.candidates, unit: "万" },
+    { label: "普通高校", value: prov.univs, unit: "所" },
+    { label: "双一流", value: prov.doubleFirst, unit: "" },
+    { label: "物理类参考线", value: prov.specialLineP || "–", unit: "" },
+    { label: "历史类参考线", value: prov.specialLineH || "–", unit: "" }
+  ];
+  document.getElementById("kpiBand").innerHTML = kpis.map(k =>
+    `<div class="kpi"><b>${k.value}${k.unit}</b><span>${k.label}</span></div>`).join("");
+
+  document.getElementById("provNote").textContent = prov.note;
+  document.getElementById("provIndustry").textContent = prov.industry;
+  document.getElementById("provHot").innerHTML = (prov.hot || []).map(h =>
+    `<span class="chip">${h}</span>`).join("");
+
+  /* 全国对比 */
+  let sum = 0, count = 0, totalDl = 0;
+  const rows = [];
+  Object.values(PROVINCES).forEach(p => {
+    if (p.region === "台港澳") return;
+    sum += p.candidates; count++; totalDl += p.doubleFirst;
+    rows.push({ name: p.name, c: p.candidates });
+  });
+  rows.sort((a, b) => b.c - a.c);
+  const rank = rows.findIndex(r => r.name === short) + 1;
+  const density = (prov.univs / prov.candidates).toFixed(1);
+  const avgDensity = (count ? (count > 0 ? 0 : 0) : 0);
+  const allUniv = Object.values(PROVINCES).reduce((s, p) => p.region === "台港澳" ? s : s + p.univs, 0);
+  const avgDens = (allUniv / sum).toFixed(1);
+  document.getElementById("vsCand").innerHTML = `${prov.candidates} 万 <small class="muted">（全国平均 ${(sum / count).toFixed(0)} 万）</small>`;
+  document.getElementById("vsDensity").innerHTML = `${density} <small class="muted">（全国平均 ${avgDens}）</small>`;
+  document.getElementById("vsDl").innerHTML = `${prov.doubleFirst} <small class="muted">（全国合计 ${totalDl}）</small>`;
+  document.getElementById("vsRank").textContent = "第 " + rank + " 名";
+
+  /* 院校列表 */
+  const list = window.COLLEGES_BY_PROV[short] || [];
+  document.getElementById("univTotal").textContent = list.length;
+  if (list.length) {
+    document.getElementById("univList").innerHTML = list.map((c, i) => `
+      <div class="college-row">
+        <span class="tag-badge ${c.level === "985" ? "tag-985" : c.level === "211" ? "tag-211" : c.level === "双一流" ? "tag-syl" : "tag-ben"}">${c.level}</span>
+        <div class="cl-info">
+          <h4>${i + 1}. ${c.name} <span class="muted" style="font-weight:600; font-size:12.5px;">${c.city}</span></h4>
+          <p>${c.type} · 演示参考档 ${c.ref} 分</p>
+        </div>
+        <div class="cl-chips">
+          ${c.tags.slice(0, 3).map(t => `<span class="chip gray">${t}</span>`).join("")}
+        </div>
+        <div class="cl-risk" style="text-align:right">
+          <span class="chip gold">热度 ${"★".repeat(c.hot)}</span>
+        </div>
+      </div>`).join("");
+  } else {
+    document.getElementById("univList").innerHTML =
+      `<div class="empty-state"><div class="big">🏫</div>该地区暂未收录演示院校，可查看地图或全国总览。</div>`;
+  }
+
+  /* 给聊天助手的快捷问题 */
+  const qs = [
+    `${short}考生 580 分能上什么学校？`,
+    `${short} 580 分能排多少名？`,
+    `${short}选物理化学能报什么专业？`,
+    `我是${short}考生，${prov.hot && prov.hot[0] ? prov.hot[0] : "计算机"}专业怎么样？`
+  ];
+  document.getElementById("provChatQuick").innerHTML = qs.map(q =>
+    `<button class="ft" data-q="${esc(q)}">${q}</button>`).join("");
+  document.querySelectorAll("#provChatQuick .ft").forEach(b => b.addEventListener("click", () => {
+    const fab = document.getElementById("xiaoai-fab");
+    if (fab) { fab.click(); setTimeout(() => {
+      const inp = document.getElementById("xiaoai-input");
+      if (inp) { inp.value = b.dataset.q; inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" })); }
+    }, 400); }
+  }));
+})();
+</script>
+</body>
+</html>

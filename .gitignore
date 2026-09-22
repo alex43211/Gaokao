@@ -1,0 +1,6 @@
+# 系统与编辑器垃圾文件
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~

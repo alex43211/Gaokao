@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全国高校地图 · 恩卓智选</title>
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb">首页 / 全国高校地图</div>
+    <h1>🗺️ 全国高校地图</h1>
+    <p>鼠标悬停查看各省概览，<b>点击任意省份</b>即可进入该省详情页：考生规模、高校分布、双一流数量、热门专业与择校建议（演示数据）。</p>
+  </div>
+</section>
+
+<section class="container">
+  <div class="map-layout">
+    <div>
+      <div class="map-shell">
+        <div id="chinaMap"></div>
+        <div class="map-tip">
+          <span><span class="legend-dot" style="background:#dbe6ff"></span>考生少</span>
+          <span><span class="legend-dot" style="background:#4a7dff"></span>中等</span>
+          <span><span class="legend-dot" style="background:#2456e6"></span>较多</span>
+          <span><span class="legend-dot" style="background:#b22222"></span>考生多（竞争激烈）</span>
+          <span style="margin-left:auto">👆 点击省份查看数据</span>
+        </div>
+      </div>
+      <div class="demo-note mt-16">图中考生规模、线分为<b>演示数据</b>，仅用于功能演示；高考报名人数请以各省教育考试院公布为准。</div>
+    </div>
+
+    <div class="side-panel">
+      <div class="side-stat-card">
+        <h4>🌍 全国总览</h4>
+        <div class="stat-mini"><span>覆盖省市区</span><span class="v">34</span></div>
+        <div class="stat-mini"><span>演示考生规模（万）</span><span class="v hot" id="sumCandidates">–</span></div>
+        <div class="stat-mini"><span>库内院校（所）</span><span class="v" id="collegeCount">–</span></div>
+        <div class="stat-mini"><span>专业解读（个）</span><span class="v" id="majorCount">–</span></div>
+      </div>
+      <div class="side-stat-card">
+        <h4>⏩ 快速前往</h4>
+        <div class="prov-quick" id="quickProvs"></div>
+      </div>
+      <div class="side-stat-card" style="background:linear-gradient(135deg,#1d2b64,#2456e6); color:#fff; border:none;">
+        <h4 style="color:rgba(255,255,255,.75)">💡 择校视角提示</h4>
+        <p style="font-size:13.5px; line-height:1.9; color:rgba(255,255,255,.92)">
+          全国地图不是看热闹用的——考生大省 vs 高校富省之间的「剪刀差」，藏着填报机会。
+          点进每个省，看三样东西：<b>本地考生多不多、高校强不强、产业缺不缺人</b>。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("map");
+
+/* 统计数字 */
+document.getElementById("collegeCount").textContent = window.COLLEGES.length + " 所";
+document.getElementById("majorCount").textContent = window.MAJORS.length + " 个";
+let sum = 0;
+Object.values(PROVINCES).forEach(p => { if (p.region !== "台港澳") sum += p.candidates; });
+document.getElementById("sumCandidates").textContent = sum.toFixed(0) + " 万";
+
+/* 快捷省份按钮 */
+(function () {
+  const box = document.getElementById("quickProvs");
+  const picks = ["北京", "江苏", "浙江", "广东", "河南", "湖北", "山东", "四川", "陕西", "辽宁", "湖南", "河北"];
+  box.innerHTML = picks.map(p => {
+    const full = PROVINCES[p].full;
+    return `<button data-full="${full}">${p}</button>`;
+  }).join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    location.href = "province.html?p=" + encodeURIComponent(b.dataset.full);
+  }));
+})();
+
+/* 主地图 */
+(function () {
+  const el = document.getElementById("chinaMap");
+  const chart = echarts.init(el);
+  echarts.registerMap("china", window.CHINA_GEO);
+
+  const data = Object.values(PROVINCES).map(p => ({
+    name: p.full, value: p.candidates,
+    short: p.full === "台湾省" ? "中国台湾" : window.shortName(p.full)
+  }));
+
+  chart.setOption({
+    tooltip: {
+      trigger: "item",
+      backgroundColor: "#fff",
+      borderColor: "#e4e9f2",
+      textStyle: { color: "#1c2740", fontSize: 13 },
+      extraCssText: "box-shadow:0 10px 30px rgba(28,44,90,.15); border-radius:12px; padding:10px 14px;",
+      formatter: function (p) {
+        const prov = PROVINCES[window.shortName(p.name)];
+        if (!prov) return `<b>${p.name}</b>`;
+        const lineP = prov.specialLineP || "–";
+        return `<b style="font-size:15px">${prov.full === "台湾省" ? "中国台湾" : prov.name}</b>
+          <br>考生规模：<b>${prov.candidates} 万</b>（演示）
+          <br>普通高校：约 ${prov.univs} 所
+          <br>双一流：${prov.doubleFirst}
+          <br>${prov.gaokao.includes("3+1+2") ? "新高考 3+1+2" : prov.gaokao.includes("3+3") ? "新高考 3+3" : prov.gaokao}
+          <br><span style="color:#2456e6">👆 点击进入该省详情</span>`;
+      }
+    },
+    visualMap: {
+      min: 0, max: 140,
+      show: false,
+      inRange: { color: ["#dfe8ff", "#8aa8ff", "#4a7dff", "#2456e6", "#8b1a1a"] }
+    },
+    series: [{
+      name: "考生规模",
+      type: "map",
+      map: "china",
+      roam: false,
+      zoom: 1.12,
+      label: { show: false },
+      itemStyle: { borderColor: "#ffffff", borderWidth: 1.2, areaColor: "#e8eefa" },
+      emphasis: {
+        label: { show: false },
+        itemStyle: { areaColor: "#ff8a5c", shadowBlur: 18, shadowColor: "rgba(255,107,53,.45)" }
+      },
+      select: { disabled: true },
+      data
+    }]
+  });
+
+  chart.on("click", function (p) {
+    const short = window.shortName(p.name);
+    if (PROVINCES[short]) {
+      location.href = "province.html?p=" + encodeURIComponent(p.name);
+    }
+  });
+  chart.on("mouseover", () => (document.body.style.cursor = "pointer"));
+  chart.on("mouseout", () => (document.body.style.cursor = "default"));
+  window.addEventListener("resize", () => chart.resize());
+})();
+</script>
+</body>
+</html>
