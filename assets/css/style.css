@@ -352,6 +352,33 @@ img { max-width: 100%; display: block; }
 }
 .qr-lightbox .cap { color:#fff; text-align:center; font-size:14px; font-weight:700; margin-top: 14px; }
 
+/* ---------- 页脚 · 访问量统计 ---------- */
+.foot-stats {
+  margin-top: 26px; padding-top: 22px;
+  border-top:1px solid rgba(255,255,255,.1);
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  gap: 10px 20px; font-size:13px; color:#aab4d6;
+}
+.foot-stats[hidden] { display:none; }   /* 必须显式声明：否则会被上面的 display:flex 覆盖 */
+.fs-badge {
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  font-size:12px; font-weight:800; letter-spacing:.3px; color:#9fb0dd;
+  background: rgba(91,124,255,.18); border:1px solid rgba(91,124,255,.32);
+  padding: 4px 12px; border-radius: 999px;
+}
+.fs-item { display:inline-flex; align-items:baseline; gap:6px; white-space:nowrap; }
+.fs-lb { font-size:12.5px; color:#8794bd; }
+.fs-v {
+  display:inline-block; min-width: 1.1em; text-align:right;
+  font-size:17px; font-weight:900; color:#fff;
+  font-variant-numeric: tabular-nums;
+}
+.fs-u { font-size:11.5px; color:#6c7aa6; }
+.fs-sep { width:1px; height:14px; background: rgba(255,255,255,.14); }
+.fs-item.na .fs-v { color:#6c7aa6; font-weight:700; }
+/* 数据来自本地缓存时用更柔和的颜色，避免被误读为实时值 */
+.foot-stats[data-cached] .fs-v { color:#c3cee9; }
+
 /* ---------- 聊天助手（小艾） ---------- */
 .chat-fab {
   position: fixed; right: 26px; bottom: 26px; z-index: 1000;
@@ -472,6 +499,9 @@ img { max-width: 100%; display: block; }
   .foot-tip { grid-template-columns: 1fr; }
   .foot-qrs { justify-content: center; }
   .foot-tip-hint { text-align: center; }
+  .foot-stats { gap: 8px 14px; }
+  .fs-sep { display: none; }
+  .fs-v { font-size: 15.5px; }
 }
 
 /* 小工具 */
