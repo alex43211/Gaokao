@@ -1,0 +1,141 @@
+/* ============================================================
+   高校校徽字体图标 —— 本地化样式
+   字体来源：全国高校校徽图标字体库 china_school_badge（Apache-2.0）
+            https://github.com/lovefc/china_school_badge
+            作者：封尘 (https://lovefc.cn)
+   字体文件：assets/font/xiaohui.woff2
+   校名 -> Unicode 映射：assets/js/data-badges.js (window.COLLEGE_BADGES)
+   说明：本文件由项目自行编写（非上游 CSS 原文），仅保留渲染所需的最小规则。
+   ============================================================ */
+
+@font-face {
+  font-family: 'fc-icon';
+  src: url(../font/xiaohui.woff2) format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 无障碍：仅屏幕阅读器可见 */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fc-badge {
+  font-family: 'fc-icon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: inline-block;
+}
+
+/* 详情页头部大校徽 */
+.badge-hero {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line, #e6e9f2);
+  box-shadow: 0 2px 10px rgba(29, 43, 100, .06);
+  overflow: hidden;
+}
+
+.badge-hero .fc-badge {
+  font-size: 58px;
+  color: #2456e6;
+  background: linear-gradient(135deg, #1d2b64, #2456e6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 校徽 + 校名 横排（详情页标题区） */
+.badge-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* 详情页两栏布局：用类替代内联样式，保证移动端能正常降为单栏 */
+.report-grid--college {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  align-items: start;
+  gap: 18px;
+}
+
+@media (max-width: 860px) {
+  .report-grid--college { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .badge-title-row {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  /* 标题区内的标签组改为整行换行，避免挤压 */
+  .badge-title-row .flex.between {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* 校徽占位（未收录校徽时使用）：显示校名首字 */
+.badge-fallback {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1d2b64, #2456e6);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+/* 列表卡片上的小校徽（可选） */
+.badge-mini {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f4f6fd;
+  overflow: hidden;
+}
+
+.badge-mini .fc-badge {
+  font-size: 24px;
+  color: #2456e6;
+}
+
+@media (max-width: 640px) {
+  .badge-hero,
+  .badge-fallback { width: 58px; height: 58px; flex-basis: 58px; border-radius: 13px; }
+  .badge-hero .fc-badge { font-size: 44px; }
+  .badge-fallback { font-size: 24px; }
+  /* 长校名允许折行，防止撑破容器 */
+  .badge-title-row h2 { word-break: break-word; }
+}

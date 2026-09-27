@@ -23,6 +23,7 @@
 <!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/badge.css">
 </head>
 <body>
 <div id="siteHeader"></div>
@@ -43,6 +44,7 @@
 <script src="assets/js/data-province-lines.js"></script>
 <script src="assets/js/data-colleges.js"></script>
 <script src="assets/js/data-colleges-all.js"></script>
+<script src="assets/js/data-badges.js"></script>
 <script src="assets/js/data-majors.js"></script>
 <script src="assets/js/data-majors-catalog.js"></script>
 <script src="assets/js/data-majors-merge.js"></script>
@@ -66,6 +68,29 @@ function normName(s) {
   return String(s || "").replace(/（/g, "(").replace(/）/g, ")").replace(/\s/g, "");
 }
 
+/* 校徽 HTML：命中字体图标库则渲染校徽，否则回落到「首字」占位
+   —— 校名 -> Unicode 的映射逐条核验自 china_school_badge 的注释标注，
+      绝不做「按顺序猜」的匹配，避免弄错学校。 */
+function badgeHtml(name) {
+  const B = window.COLLEGE_BADGES || {};
+  const n = normName(name);
+  let uni = B[name];
+  if (!uni) {                                   // 容错：忽略括号/全半角差异再找
+    for (const k in B) {
+      if (normName(k) === n) { uni = B[k]; break; }
+    }
+  }
+  if (uni) {
+    // 用 <i> 承载 Unicode 码点，配合 badge.css 的字体族渲染
+    return `<div class="badge-hero" title="${esc(name)} 校徽">
+        <i class="fc-badge" aria-hidden="true">&#x${uni};</i>
+        <span class="sr-only">${esc(name)}校徽</span>
+      </div>`;
+  }
+  const ch = (name || "校").trim().charAt(0) || "校";
+  return `<div class="badge-fallback" title="${esc(name)}（未收录校徽，以校名首字占位）">${esc(ch)}</div>`;
+}
+
 (function () {
   const main = document.getElementById("colMain");
   const name = decodeURIComponent(window.qs("name"));
@@ -75,7 +100,10 @@ function normName(s) {
   /* 先在完整名单里找（覆盖所有正规院校），再回落到精英库 */
   const all = ALL.find(c => normName(c.name) === normName(name));
   const col = C.find(c => normName(c.name) === normName(name)) || (all && all.elite
-    ? Object.assign({}, all.elite, { name: all.name, prov: all.prov, city: all.city, level: all.tier })
+    ? Object.assign({}, all.elite, {
+        name: all.name, prov: all.prov, city: all.city,
+        level: all.cat, tags: all.tags,
+      })
     : null);
 
   if (!all && !col) {
@@ -98,7 +126,7 @@ function normName(s) {
   const dName  = all ? all.name  : col.name;
   const dProv  = (all && all.prov) || col.prov || "";
   const dCity  = (all && all.city) || col.city || "";
-  const dLevel = (all && all.tier) || col.level || "";
+  const dLevel = (all && all.cat) || col.level || "";
   const dType  = (col && col.type) || "—";
   const dCode  = all ? all.code : "";
   const dDept  = all ? all.dept : "";
@@ -114,6 +142,13 @@ function normName(s) {
   const prov = (window.PROVINCES || {})[dProv];
   const lvMap = { "985": "purple", "211": "gold", "双一流": "green", "普通本": "gray", "专科": "gray" };
 
+  /* 多标签：优先取数据层 tags（可多值），回落单值分类 */
+  const allTags = (all && (all.tags || []).length) ? all.tags
+    : (all && all.cat ? [all.cat] : []);
+  const dCat = dLevel || (all && all.cat) || "";
+  const TAG_CLS = { "C9": "purple", "985": "purple", "211": "gold", "双一流": "green" };
+  const tagCls = t => TAG_CLS[t] || "gray";
+
   /* 同省院校：优先取官方名单里的同省院校 */
   const sameProvPool = all ? ALL.filter(c => c.prov === dProv && c.name !== dName) : C.filter(c => c.prov === dProv && c.name !== dName);
   const sameProv = sameProvPool.slice(0, 40);
@@ -122,35 +157,64 @@ function normName(s) {
   const hasElite = col && col.note;
 
   main.innerHTML = `
-    <div class="report-grid" style="grid-template-columns:1fr 320px; align-items:start;">
+    <div class="report-grid report-grid--college">
       <div>
         <div class="report-card" style="margin:0 0 18px;">
-          <div class="flex between items-center wrap gap-10">
-            <div>
-              <h2 style="margin:0;font-size:22px;">${esc(dName)}</h2>
-              <div class="muted small mt-8">
-                ${esc(dCity)}${dProv ? "（" + esc(dProv) + "）" : ""}
-                ${dCode ? " ｜ 学校标识码 " + esc(dCode) : ""}
+          <div class="badge-title-row">
+            ${badgeHtml(dName)}
+            <div style="flex:1;min-width:0;">
+              <div class="flex between items-center wrap gap-10">
+                <div>
+                  <h2 style="margin:0;font-size:22px;">${esc(dName)}</h2>
+                  <div class="muted small mt-8">
+                    ${esc(dCity)}${dProv ? "（" + esc(dProv) + "）" : ""}
+                    ${dCode ? " ｜ 学校标识码 " + esc(dCode) : ""}
+                  </div>
+                </div>
+                <div class="flex wrap gap-6">
+                  ${(allTags.length ? allTags : [dCat]).map(t =>
+                    `<span class="chip ${tagCls(t)}" style="font-size:13px;padding:6px 14px;font-weight:600;">${esc(t)}</span>`
+                  ).join("")}
+                </div>
               </div>
             </div>
-            ${dLevel ? `<span class="chip ${lvMap[dLevel] || "gray"}" style="font-size:13px;padding:7px 14px;">${esc(dLevel)}</span>` : ""}
           </div>
+
+          <!-- 院校层次标签（可多值） -->
+          ${allTags.length ? `
+          <div class="mt-16" style="padding:14px 16px;background:#f5fff9;border:1px solid #cfeee0;border-radius:12px;">
+            <b class="small">🏅 院校层次</b>
+            <div class="mt-10 flex wrap gap-10">
+              ${allTags.map(t => {
+                const desc = { "C9": "九校联盟", "985": "985 工程", "211": "211 工程", "双一流": "双一流建设高校" }[t] || "";
+                return `<span class="chip ${tagCls(t)}" style="font-size:13px;padding:6px 14px;font-weight:600;">${esc(t)}${desc ? " · " + desc : ""}</span>`;
+              }).join("")}
+            </div>
+            <p class="muted small mt-10" style="margin-bottom:0;line-height:1.9;">
+              ${allTags.includes("985")
+                ? "该校为 <b>985 工程</b> 高校，同时必然具备 211 与双一流身份；985 / 211 名单已固定，不再新增。"
+                : allTags.includes("211")
+                  ? "该校为 <b>211 工程</b> 高校，同时具备双一流身份；211 名单已固定，不再新增。"
+                  : "该校为 <b>双一流</b> 建设高校（第二轮 · 2022 年）。双一流名单动态调整，以教育部最新公布为准。"}
+            </p>
+          </div>` : ""}
 
           <!-- 官方登记信息（照录教育部名单，可核验） -->
           ${all ? `
           <div class="mt-16" style="padding:14px 16px;background:#f7f9ff;border:1px solid #e2e9fb;border-radius:12px;">
-            <b class="small">📋 教育部官方登记信息</b>
+            <b class="small">📋 ${all.src === "army" ? "军队院校信息" : "教育部官方登记信息"}</b>
             <div class="grid g2 mt-10" style="gap:8px 20px;">
               <div class="stat-mini"><span>学校名称</span><span class="v">${esc(all.name)}</span></div>
-              <div class="stat-mini"><span>学校标识码</span><span class="v" style="font-family:ui-monospace,Menlo,Consolas,monospace;">${esc(all.code)}</span></div>
+              <div class="stat-mini"><span>学校标识码</span><span class="v" style="font-family:ui-monospace,Menlo,Consolas,monospace;">${esc(all.code || "—")}</span></div>
               <div class="stat-mini"><span>主管部门</span><span class="v">${esc(all.dept)}</span></div>
               <div class="stat-mini"><span>所在地</span><span class="v">${esc(all.city)}</span></div>
               <div class="stat-mini"><span>办学层次</span><span class="v">${esc(all.level)}</span></div>
               <div class="stat-mini"><span>办学性质</span><span class="v">${esc(all.remark || "公办")}</span></div>
             </div>
             <p class="muted small mt-10" style="margin-bottom:0;">
-              以上照录教育部《全国高等学校名单》（截至 2026年6月17日）。
-              标识码前 5 位为省级行政区与办学类型代码，后 5 位为校内序号。
+              ${all.src === "army"
+                ? "该校为<b>军队院校</b>，不列入教育部《全国高等学校名单》（该名单仅收录普通高校与成人高校），但确属 985 / 211 / 双一流 序列，故单独补录展示。"
+                : "以上照录教育部《全国高等学校名单》（截至 2026年6月17日）。标识码前 5 位为省级行政区与办学类型代码，后 5 位为校内序号。"}
             </p>
           </div>` : ""}
 
@@ -227,7 +291,7 @@ function normName(s) {
           <h3 style="margin:0 0 12px;font-size:17px;">🏙️ ${esc(dProv)} 的其他院校（共 ${sameProvTotal} 所${sameProvTotal > sameProv.length ? "，显示前 " + sameProv.length + " 所" : ""}）</h3>
           <div class="flex wrap gap-10">
             ${sameProv.map(c => `<a class="chip" href="college.html?name=${encodeURIComponent(c.name)}"
-                style="border:1px solid var(--line);background:#fff;padding:7px 13px;">${esc(c.name)}<span class="muted"> · ${esc(c.tier || c.level)}</span></a>`).join("")}
+                style="border:1px solid var(--line);background:#fff;padding:7px 13px;">${esc(c.name)}<span class="muted"> · ${esc(c.cat || c.level)}</span></a>`).join("")}
           </div>
           <div class="mt-16">
             <a class="btn btn-ghost btn-sm" href="colleges.html?q=${encodeURIComponent("")}">在 ${esc(dProv)} 全部院校中筛选 →</a>
@@ -242,7 +306,7 @@ function normName(s) {
           <div class="stat-mini"><span>所在省份</span><span class="v">${esc(dProv || "—")}</span></div>
           <div class="stat-mini"><span>所在城市</span><span class="v">${esc(dCity || "—")}</span></div>
           <div class="stat-mini"><span>办学层次</span><span class="v">${esc(dLen || "—")}</span></div>
-          ${dLevel ? `<div class="stat-mini"><span>层次标签</span><span class="v">${esc(dLevel)}</span></div>` : ""}
+          ${allTags.length ? `<div class="stat-mini"><span>层次标签</span><span class="v">${allTags.map(esc).join(" · ")}</span></div>` : ""}
           <div class="stat-mini"><span>办学性质</span><span class="v">${esc(dRemark || "公办")}</span></div>
           <div class="stat-mini"><span>主管部门</span><span class="v">${esc(dDept || "—")}</span></div>
           <div class="stat-mini"><span>本地高校(全省)</span><span class="v">${all ? ALL.filter(c => c.prov === dProv).length : C.filter(c => c.prov === dProv).length} 所</span></div>

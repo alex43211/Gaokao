@@ -253,17 +253,20 @@ buildShell("home");
       </a>`).join("");
 
     const cHtml = colleges.map(c => {
-      const tier = c.tier || c.level || "";
-      const cls = tier === "985" ? "purple" : (tier === "211" || tier === "双一流") ? "gold" : "gray";
+      const tags = (c.tags && c.tags.length) ? c.tags : (c.cat ? [c.cat] : []);
+      const TAG_CLS = { "C9": "purple", "985": "purple", "211": "gold", "双一流": "green" };
+      const chips = tags.slice(0, 3).map(t =>
+        `<span class="chip ${TAG_CLS[t] || "gray"}">${esc(t)}</span>`).join("") ||
+        `<span class="chip gray">${esc(c.level || "院校")}</span>`;
       const sub = c.code
         ? `${esc(c.city)} · 标识码 ${esc(c.code)}`
-        : `${esc(c.prov)} · ${esc(c.city)} · ${esc(c.type || "")}类`;
+        : `${esc(c.prov)} · ${esc(c.city)} · 军队院校`;
       const desc = (c.elite && c.elite.note) || c.note || "";
       return `
       <a class="hs-card" href="college.html?name=${encodeURIComponent(c.name)}">
         <div class="hs-card-h">
           <b>${esc(c.name)}</b>
-          <span class="chip ${cls}">${esc(tier)}</span>
+          ${chips}
         </div>
         <div class="hs-card-m">${sub}</div>
         ${desc ? `<div class="hs-card-d">${esc(desc)}</div>` : ""}

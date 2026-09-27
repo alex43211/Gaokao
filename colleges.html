@@ -23,6 +23,7 @@
 <!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/badge.css">
 </head>
 <body>
 <div id="siteHeader"></div>
@@ -36,6 +37,19 @@
       共 <b>2952 所</b>普通高等学校：本科 <b id="cntBen">1412</b> 所，高职专科 <b id="cntZhuan">1540</b> 所。
       支持按 <b>校名</b>、<b>学校标识码</b>、<b>省份</b>、<b>办学层次</b> 查询。
       <span class="muted">数据来源：<a href="https://hudong.moe.gov.cn/qggxmd/" target="_blank" rel="noopener noreferrer">教育部全国高等学校名单</a></span>
+    </p>
+    <p class="mt-8" style="line-height:2;">
+      院校层次标签可直接筛选：
+      <span class="chip purple" style="font-weight:600;">C9</span> 九校联盟 <b>9</b> 所 ｜
+      <span class="chip purple" style="font-weight:600;">985</span> 工程 <b>39</b> 所 ｜
+      <span class="chip gold" style="font-weight:600;">211</span> 工程 <b>116</b> 所 ｜
+      <span class="chip green" style="font-weight:600;">双一流</span> 建设高校 <b>147</b> 所（第二轮 · 2022年）。
+      <span class="muted">一所学校可能同时带多个标签——例如清华大学同时是
+      <b>C9 / 985 / 211 / 双一流</b>；集合关系为 <b>C9 ⊂ 985 ⊂ 211 ⊂ 双一流</b>。</span>
+    </p>
+    <p class="muted small mt-8" style="line-height:1.9;">
+      口径说明：<b>985</b>、<b>211</b> 工程均已停止新增，名单固定；<b>双一流</b> 名单每轮动态调整，以教育部最新公布为准。
+      国防科技大学、海军军医大学、空军军医大学为<b>军队院校</b>，不在《全国高等学校名单》内，为完整呈现 985/211/双一流 序列已单独补录。
     </p>
   </div>
 </section>
@@ -80,8 +94,9 @@
 
   <div class="demo-note mt-24">
     ℹ️ 本名单为<b>教育部官方公布的完整院校名录</b>（校名、标识码、主管部门、所在地、办学层次均照录官方），
-    用于"这所学校是否为正规高校"的核验。<b>不含</b>各校招生专业、选科要求、录取分数——
-    那部分请点击院校进入详情页，走官方查询入口。
+    用于"这所学校是否为正规高校"的核验。<b>层次标签</b>（C9/985/211/双一流）依据教育部及
+    教育部·财政部·国家发展改革委公布的权威名单整理，一所学校可同时具备多个标签。
+    <b>不含</b>各校招生专业、选科要求、录取分数——那部分请点击院校进入详情页，走官方查询入口。
   </div>
 </section>
 
@@ -90,6 +105,7 @@
 <script src="assets/js/data-provinces.js"></script>
 <script src="assets/js/data-colleges.js"></script>
 <script src="assets/js/data-colleges-all.js"></script>
+<script src="assets/js/data-badges.js"></script>
 <script src="assets/js/data-majors.js"></script>
 <script src="assets/js/data-majors-catalog.js"></script>
 <script src="assets/js/data-majors-merge.js"></script>
@@ -124,19 +140,24 @@ buildShell("college");
   let __lastCount = 0;
 
   /* ---------- 顶部计数 ---------- */
-  const ben = ALL.filter(c => c.level === "本科").length;
-  const zhuan = ALL.length - ben;
+  const moeAll  = ALL.filter(c => c.src !== "army");
+  const ben     = moeAll.filter(c => c.level === "本科").length;
+  const zhuan   = moeAll.length - ben;
   document.getElementById("cntBen").textContent = ben;
   document.getElementById("cntZhuan").textContent = zhuan;
+  const elTotal = document.getElementById("heroCollegeTotal");
+  if (elTotal) elTotal.textContent = moeAll.length;
 
-  /* ---------- 层次标签 ---------- */
+  /* ---------- 层次标签（多标签：同一校可同时出现在多个标签下） ---------- */
+  const cntTag = t => ALL.filter(c => (c.tags || []).includes(t)).length;
   const LEVELS = [
-    { k: "全部",   t: "全部" },
-    { k: "985",    t: "985（" + ALL.filter(c => c.tier === "985").length + "）" },
-    { k: "211",    t: "211（" + ALL.filter(c => c.tier === "211").length + "）" },
-    { k: "双一流", t: "双一流（" + ALL.filter(c => c.tier === "双一流").length + "）" },
-    { k: "普通本", t: "普通本科（" + ALL.filter(c => c.tier === "普通本").length + "）" },
-    { k: "专科",   t: "高职专科（" + ALL.filter(c => c.tier === "专科").length + "）" },
+    { k: "全部",   t: "全部（" + ALL.length + "）" },
+    { k: "C9",     t: "C9（" + cntTag("C9") + "）" },
+    { k: "985",    t: "985（" + cntTag("985") + "）" },
+    { k: "211",    t: "211（" + cntTag("211") + "）" },
+    { k: "双一流", t: "双一流（" + cntTag("双一流") + "）" },
+    { k: "普通本", t: "普通本科（" + ALL.filter(c => c.cat === "普通本").length + "）" },
+    { k: "专科",   t: "高职专科（" + ALL.filter(c => c.cat === "专科").length + "）" },
   ];
   levelTags.innerHTML = LEVELS.map(l =>
     `<button type="button" class="ft${l.k === "全部" ? " on" : ""}" data-level="${esc(l.k)}">${esc(l.t)}</button>`
@@ -148,13 +169,15 @@ buildShell("college");
     render();
   }));
 
-  /* ---------- 省份标签（按院校数降序） ---------- */
+  /* ---------- 省份标签（按院校数降序，仅统计教育部名单） ---------- */
   const byProv = window.COLLEGE_BY_PROV || {};
   const provList = Object.keys(byProv)
+    .filter(p => p && byProv[p].some(c => c.src !== "army"))
     .sort((a, b) => byProv[b].length - byProv[a].length);
+  const cntProv = p => (byProv[p] || []).filter(c => c.src !== "army").length;
   provTags.innerHTML =
     `<button type="button" class="ft on" data-prov="全部">全部省份</button>` +
-    provList.map(p => `<button type="button" class="ft" data-prov="${esc(p)}">${esc(p)}（${byProv[p].length}）</button>`).join("");
+    provList.map(p => `<button type="button" class="ft" data-prov="${esc(p)}">${esc(p)}（${cntProv(p)}）</button>`).join("");
   provTags.querySelectorAll(".ft").forEach(b => b.addEventListener("click", () => {
     state.prov = b.dataset.prov;
     provTags.querySelectorAll(".ft").forEach(x => x.classList.toggle("on", x === b));
@@ -165,8 +188,13 @@ buildShell("college");
   /* ---------- 筛选 ---------- */
   function filtered() {
     const q = state.q.trim().toLowerCase();
+    const TIER_TAGS = ["C9", "985", "211", "双一流"];
     return ALL.filter(c => {
-      if (state.level !== "全部" && c.tier !== state.level) return false;
+      if (TIER_TAGS.includes(state.level)) {
+        if (!(c.tags || []).includes(state.level)) return false;
+      } else if (state.level !== "全部") {
+        if (c.cat !== state.level) return false;
+      }
       if (state.prov !== "全部" && c.prov !== state.prov) return false;
       if (q) {
         const hay = (c.name + " " + c.code + " " + c.city + " " + c.dept).toLowerCase();
@@ -177,26 +205,43 @@ buildShell("college");
   }
 
   /* ---------- 卡片 ---------- */
-  const TIER_CLS = { "985": "purple", "211": "gold", "双一流": "green", "普通本": "gray", "专科": "gray" };
+  const TAG_CLS = { "C9": "purple", "985": "purple", "211": "gold", "双一流": "green" };
+
+  /* 小校徽：命中字体图标库则显示，否则显示校名首字 */
+  const BADGES = window.COLLEGE_BADGES || {};
+  function miniBadge(name) {
+    let uni = BADGES[name];
+    if (!uni) {
+      const n = name.replace(/（/g, "(").replace(/）/g, ")").replace(/\s/g, "");
+      for (const k in BADGES) {
+        if (k.replace(/（/g, "(").replace(/）/g, ")").replace(/\s/g, "") === n) { uni = BADGES[k]; break; }
+      }
+    }
+    if (uni) return `<span class="badge-mini"><i class="fc-badge" aria-hidden="true">&#x${uni};</i></span>`;
+    return `<span class="badge-mini" style="background:linear-gradient(135deg,#1d2b64,#2456e6);color:#fff;font-size:13px;font-weight:700;">${esc((name || "校").trim().charAt(0))}</span>`;
+  }
 
   function card(c) {
-    const tierCls = TIER_CLS[c.tier] || "gray";
+    const tags = c.tags || [];
+    const chips = tags.map(t =>
+      `<span class="chip ${TAG_CLS[t] || "gray"}" style="font-size:11px;padding:2px 9px;font-weight:600;">${esc(t)}</span>`
+    ).join("");
     const flag = c.remark ? `<span class="chip" style="font-size:11px;padding:2px 8px;">${esc(c.remark)}</span>` : "";
+    const lv = c.level ? `<span class="chip" style="font-size:11px;padding:2px 9px;">${esc(c.level)}</span>` : "";
     return `
       <a class="major-card" href="college.html?name=${encodeURIComponent(c.name)}" style="text-decoration:none;">
-        <div class="top">
-          <div>
+        <div class="top" style="align-items:center;gap:12px;">
+          ${miniBadge(c.name)}
+          <div style="flex:1;min-width:0;">
             <h3>${esc(c.name)}</h3>
-            <div class="cat">${esc(c.city)} · ${esc(c.dept)}</div>
+            <div class="cat">${esc(c.city)}${c.prov ? " · " + esc(c.prov) : ""} · ${esc(c.dept)}</div>
           </div>
         </div>
         <div class="major-meta">
-          <span>标识码 <b style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;">${esc(c.code)}</b></span>
+          <span>${c.code ? "标识码 <b style=\"font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;\">" + esc(c.code) + "</b>" : "军队院校"}</span>
         </div>
         <div class="flex wrap gap-6" style="margin-top:10px;">
-          <span class="chip ${tierCls}" style="font-size:11px;padding:2px 9px;">${esc(c.tier)}</span>
-          <span class="chip" style="font-size:11px;padding:2px 9px;">${esc(c.level)}</span>
-          ${flag}
+          ${chips}${lv}${flag}
         </div>
       </a>`;
   }
@@ -211,7 +256,8 @@ buildShell("college");
     sumLine.innerHTML = `共 <b>${list.length}</b> 所院校` +
       (state.level !== "全部" ? ` ｜ 层次：<b>${esc(state.level)}</b>` : "") +
       (state.prov !== "全部" ? ` ｜ 省份：<b>${esc(state.prov)}</b>` : "") +
-      (state.q ? ` ｜ 关键词：<b>${esc(state.q)}</b>` : "");
+      (state.q ? ` ｜ 关键词：<b>${esc(state.q)}</b>` : "") +
+      ` ｜ 数据来源：<b>${state.level === "全部" && state.prov === "全部" && !state.q ? "教育部《全国高等学校名单》2952 所 + 军队院校 3 所" : "教育部名单"}</b>`;
 
     const more = list.length - show.length;
     moreBox.style.display = more > 0 ? "" : "none";
