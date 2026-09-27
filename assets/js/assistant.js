@@ -9,7 +9,23 @@
     host.id = "xiaoai-root";
     host.innerHTML = `
       <button class="chat-fab" id="xiaoai-fab" title="问小艾 · 高考志愿助手" aria-label="打开小艾助手">
-        <span class="pulse"></span>🤖
+        <span class="pulse"></span>
+        <svg class="fab-cat" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M12 15 L8 5 L17 11 Z" fill="#fff"/>
+          <path d="M36 15 L40 5 L31 11 Z" fill="#fff"/>
+          <path d="M12 15 L9.5 8.5 L15.5 12 Z" fill="#ffb08a"/>
+          <path d="M36 15 L38.5 8.5 L32.5 12 Z" fill="#ffb08a"/>
+          <ellipse cx="24" cy="26" rx="14" ry="12.5" fill="#fff"/>
+          <ellipse cx="19" cy="24.5" rx="2.1" ry="2.6" fill="#3a2418"/>
+          <ellipse cx="29" cy="24.5" rx="2.1" ry="2.6" fill="#3a2418"/>
+          <ellipse cx="19.6" cy="23.6" rx=".75" ry=".85" fill="#fff"/>
+          <ellipse cx="29.6" cy="23.6" rx=".75" ry=".85" fill="#fff"/>
+          <path d="M24 28.5 l-1.7 1.7 a2.4 2.4 0 0 0 3.4 0 Z" fill="#ff8f9c"/>
+          <path d="M24 30.5 v1.6 M24 32.1 q-2.6 2.2 -4.6 .4 M24 32.1 q2.6 2.2 4.6 .4"
+                fill="none" stroke="#3a2418" stroke-width="1.15" stroke-linecap="round"/>
+          <path d="M8.5 24.5 h-4 M8.5 28.5 h-3.5 M39.5 24.5 h4 M39.5 28.5 h3.5"
+                fill="none" stroke="#ffd9c6" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
       </button>
       <div class="chat-panel" id="xiaoai-panel">
         <div class="chat-head">

@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>本科专业百科 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="本科专业百科 · 875 个专业全收录 | 恩卓智选">
+<meta property="og:description" content="覆盖 875 个本科专业的课程、就业、薪资与 AI 冲击解读，选科要求按教育部《选考科目要求指引》核正。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/majors.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="本科专业百科 · 875 个专业全收录 | 恩卓智选">
+<meta name="twitter:description" content="覆盖 875 个本科专业的课程、就业、薪资与 AI 冲击解读，选科要求按教育部《选考科目要求指引》核正。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/majors.html">
+<!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -19,15 +36,21 @@
 </section>
 
 <section class="container">
-  <div class="filter-bar" style="margin-top:26px;">
+  <div class="filter-bar" id="filterBar" style="margin-top:26px;">
     <div class="search-row">
-      <div class="search-box">
+      <div class="search-box" id="searchBox">
         <span class="si">🔍</span>
-        <input id="searchInput" placeholder="搜索专业名称，如：计算机、临床、法学…">
+        <input id="searchInput" type="search" enterkeyhint="search" autocomplete="off"
+               placeholder="搜索专业名称 / 代码 / 就业方向，如：精神医学、机械、计算机…">
+        <button type="button" class="search-clear" id="searchClear" title="清空" aria-label="清空">✕</button>
       </div>
-      <button class="btn btn-brand" id="clearBtn" style="display:none;">清除</button>
+      <button class="btn btn-brand" id="searchBtn">搜索</button>
     </div>
     <div class="filter-tags" id="catTags"></div>
+  </div>
+  <div class="search-collapsed" id="searchCollapsed" style="display:none;">
+    <span class="q">🔍 搜索「<b id="scQ"></b>」，共 <b id="scN">0</b> 个结果</span>
+    <button type="button" id="scEdit">修改关键词</button>
   </div>
   <div id="majorGrid" class="grid g3"></div>
   <div class="flex items-center gap-10 mt-24" id="moreBox" style="display:none; justify-content:center;">
@@ -35,7 +58,8 @@
   </div>
   <div id="emptyBox" class="empty-state" style="display:none">
     <div class="big">🔎</div>
-    <p>没有找到匹配的专业，换个关键词试试？也可以问问小艾 🤖</p>
+    <p>没有找到匹配的专业，换个关键词试试？</p>
+    <button class="btn btn-ghost mt-16" id="emptyEdit">✏️ 修改关键词</button>
   </div>
 </section>
 
@@ -83,6 +107,7 @@ buildShell("majors");
 const state = { cat: "全部", q: "", limit: 60 };
 
 const PAGE_STEP = 60;
+let __lastCount = 0;   // 最近一次渲染的命中数量，供「搜索已收起」提示条读取
 function render() {
   const grid = document.getElementById("majorGrid");
   const empty = document.getElementById("emptyBox");
@@ -103,6 +128,7 @@ function render() {
   list.sort((a, b) => (catOrder.indexOf(a.cat) - catOrder.indexOf(b.cat)) || (a.code > b.code ? 1 : -1));
   const visible = list.slice(0, state.limit);
   const total = list.length;
+  __lastCount = total;
   grid.innerHTML = visible.map(m => {
     const isCat = m.catOnly === true;
     const specStr = (m.spec && m.spec.length) ? ` · ${m.spec.join("/")}专业` : "";
@@ -235,33 +261,77 @@ document.getElementById("modalClose").addEventListener("click", closeModal);
 document.getElementById("majorModal").addEventListener("click", e => { if (e.target.id === "majorModal") closeModal(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
-/* URL 参数直达 */
+/* URL 参数与搜索交互 */
 (function () {
+  const input = document.getElementById("searchInput");
+  const box = document.getElementById("searchBox");
+  const bar = document.getElementById("filterBar");
+  const collapsed = document.getElementById("searchCollapsed");
+  const scQ = document.getElementById("scQ");
+  const scN = document.getElementById("scN");
+
+  /* 输入框有内容时显示内嵌清空小叉 */
+  function syncClear() { box.classList.toggle("has-val", !!input.value.trim()); }
+  input.addEventListener("input", syncClear);
+
+  /* 点小叉：清空并重新聚焦（不直接搜索） */
+  document.getElementById("searchClear").addEventListener("click", () => {
+    input.value = ""; state.q = ""; syncClear(); input.focus();
+  });
+
+  /* 把搜索框收起来，让结果占满屏幕（用户核心诉求：搜完框就消失） */
+  function collapseSearch(q, n) {
+    scQ.textContent = q;
+    scN.textContent = n;
+    collapsed.style.display = "";
+    bar.style.display = "none";
+    input.blur();                       // 关键：收起手机输入法
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  function expandSearch() {
+    collapsed.style.display = "none";
+    bar.style.display = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => input.focus(), 220);
+  }
+  document.getElementById("scEdit").addEventListener("click", expandSearch);
+  document.getElementById("emptyEdit").addEventListener("click", expandSearch);
+
+  /* 真正的搜索：只在这里更新 state.q 并渲染 */
+  function doSearch() {
+    const q = input.value.trim();
+    state.q = q;
+    state.limit = PAGE_STEP;
+    render();
+    if (q) collapseSearch(q, __lastCount);
+    else expandSearch();
+  }
+  document.getElementById("searchBtn").addEventListener("click", doSearch);
+  /* 手机键盘上的「搜索 / 前往」键 */
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } });
+
+  /* 吸顶控制：只有搜索栏还在首屏时才吸附，滚过去就取消，避免全程遮挡 */
+  if ("IntersectionObserver" in window) {
+    const sentinel = document.createElement("div");
+    sentinel.style.cssText = "height:1px;margin-top:-1px;";
+    bar.parentNode.insertBefore(sentinel, bar);
+    new IntersectionObserver(
+      ([e]) => bar.classList.toggle("stuck", e.intersectionRatio > 0),
+      { threshold: [0] }
+    ).observe(sentinel);
+  }
+
+  /* URL 参数直达：?q=专业名 */
   const q = decodeURIComponent(window.qs("q"));
   if (q) {
+    input.value = q;
+    syncClear();
     state.q = q;
-    document.getElementById("searchInput").value = q;
-    document.getElementById("clearBtn").style.display = "";
     const m = MAJORS.find(x => x.name === q);
-    if (m) {
-      // 跳到对应卡片打开详情
-      render();
-      openMajor(m.id);
-    }
+    if (m) { render(); collapseSearch(q, __lastCount); openMajor(m.id); }
+    else { render(); collapseSearch(q, __lastCount); }
   }
-  document.getElementById("searchInput").addEventListener("input", e => {
-    state.q = e.target.value.trim();
-    state.limit = PAGE_STEP;
-    document.getElementById("clearBtn").style.display = state.q ? "" : "none";
-    render();
-  });
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    state.q = "";
-    state.limit = PAGE_STEP;
-    document.getElementById("searchInput").value = "";
-    document.getElementById("clearBtn").style.display = "none";
-    render();
-  });
+  syncClear();
 })();
 
 document.getElementById("moreBtn").addEventListener("click", () => {

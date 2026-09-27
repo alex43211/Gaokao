@@ -5,10 +5,14 @@
   window.APP = window.APP || { name: "恩卓智选" };
   window.APP.LOGO_SRC = "assets/logo.jpg";
   window.APP.LOGO_EN = "ENZO CURATED";
+  // 线上地址：仅用于页脚「分享本站」展示与复制，非本项目域名访问时也能显示
+  window.APP.SITE_URL = "https://alex43211.github.io/Gaokao/";
+  const SITE_URL = window.APP.SITE_URL;
   const NAV = [
     { id: "home",    label: "首页",        href: "index.html" },
     { id: "map",     label: "全国地图",    href: "map.html" },
     { id: "majors",  label: "专业百科",    href: "majors.html" },
+    { id: "college", label: "高校查询",    href: "college.html" },
     { id: "plan",    label: "AI 志愿填报", href: "plan.html" },
   ];
   const SUBS = [
@@ -32,9 +36,36 @@
           <div class="topbar-actions">
             <span class="badge-demo">数据演示版 v1.1</span>
             <a href="plan.html" class="btn btn-brand btn-sm">立即模拟填报</a>
+            <button type="button" class="nav-toggle" id="navToggle"
+                    aria-label="打开菜单" aria-expanded="false" aria-controls="mobileNav">
+              <span></span><span></span><span></span>
+            </button>
           </div>
         </div>
+      </div>
+      <div class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-inner">
+          ${NAV.map(n => `<a href="${n.href}" class="${n.id === active ? "active" : ""}">${n.label}</a>`).join("")}
+          <a href="report.html?demo=1">报告样例</a>
+        </div>
       </div>`;
+
+    /* 汉堡菜单开合（窄屏专用） */
+    (function () {
+      const tg = document.getElementById("navToggle");
+      const mn = document.getElementById("mobileNav");
+      if (!tg || !mn) return;
+      const setOpen = (open) => {
+        mn.classList.toggle("open", open);
+        tg.classList.toggle("on", open);
+        tg.setAttribute("aria-expanded", open ? "true" : "false");
+        document.body.classList.toggle("nav-open", open);
+      };
+      tg.addEventListener("click", () => setOpen(!mn.classList.contains("open")));
+      mn.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setOpen(false)));
+      document.addEventListener("keydown", e => { if (e.key === "Escape") setOpen(false); });
+      window.addEventListener("resize", () => { if (window.innerWidth > 1020) setOpen(false); });
+    })();
     const f = document.getElementById("siteFooter");
     if (f) f.innerHTML = `
       <footer class="site-footer">
@@ -50,8 +81,8 @@
               <h4>功能导航</h4>
               <a href="map.html">全国高校地图</a>
               <a href="majors.html">本科专业百科</a>
+              <a href="college.html">高校查询</a>
               <a href="plan.html">AI 志愿模拟填报</a>
-              <a href="index.html#how">志愿方法论</a>
             </div>
             <div>
               <h4>学生关心</h4>
@@ -62,18 +93,18 @@
             </div>
             <div>
               <h4>关于本站</h4>
-              <a href="index.html#about">项目说明</a>
+              <a href="index.html#access">使用权限说明</a>
               <a href="report.html?demo=1">可视化报告样例</a>
               <span style="font-size:12px;color:#6c7aa6">智能助手 · 小艾<br>7×24 在线答疑</span>
             </div>
           </div>
-          <!-- ===== 咨询与赞赏 ===== -->
+          <!-- ===== 咨询与赞赏（完全可选，非付费墙） ===== -->
           <div class="foot-tip">
             <div class="foot-tip-copy">
-              <h4>💛 支持我们 · 一对一志愿咨询</h4>
-              <p>本站的高校地图、专业百科、AI 模拟填报与可视化报告<b style="color:#cdd6ee">全部免费开放</b>，不设会员、不锁功能。
-              如果它帮你少走了一点弯路，欢迎扫码请我们喝杯咖啡；
-              若需要针对自家孩子的分数与家庭情况做一对一方案诊断，也请通过下方二维码联系。</p>
+              <h4>☕ 自愿打赏 · 一对一咨询（<span style="color:#ffd089">完全可选，不是付费墙</span>）</h4>
+              <p><b style="color:#cdd6ee">本站的高校地图、专业百科、AI 模拟填报与可视化报告全部免费，不需要注册、不需要付费、不锁任何功能。</b>
+              你刚才看到的所有结果都已经免费生成完毕，下方二维码与功能使用无关，纯粹是如果你愿意支持我们。
+              若需要针对自家孩子的分数与家庭情况做一对一方案诊断，也欢迎扫码联系。</p>
               <span class="thanks">🙏 感谢每一份支持 —— 你的每一次打赏，都会让更多普通家庭用上不收费的志愿工具。</span>
             </div>
             <div>
@@ -89,6 +120,25 @@
               </div>
               <div class="foot-tip-hint">💡 点击二维码可放大，方便电脑端扫码</div>
             </div>
+          </div>
+
+          <!-- ===== 分享本站 ===== -->
+          <div class="foot-share">
+            <div class="foot-share-tx">
+              <h4>📤 把本站分享给需要的人</h4>
+              <p>高考志愿是一家人的事。用微信扫一扫、或长按识别右侧二维码，即可在手机上打开本站，
+              再点右上角「···」就能转发给<b style="color:#cdd6ee">微信好友、家长群</b>。
+              电脑端也可以直接复制网址发给对方。</p>
+              <div class="foot-share-acts">
+                <code class="foot-share-url">${SITE_URL}</code>
+                <button type="button" class="foot-share-copy">复制网址</button>
+              </div>
+            </div>
+            <button type="button" class="foot-share-qr" data-qr="assets/qr/site.png"
+                    data-cap="微信扫一扫 / 长按识别 · 打开并转发本站">
+              <img src="assets/qr/site-240.png" alt="本站二维码" loading="lazy">
+              <span>微信扫码分享</span>
+            </button>
           </div>
 
           <!-- ===== 访问量统计 ===== -->
@@ -114,7 +164,7 @@
         </div>
       </footer>`;
 
-    /* 收款码点击放大（点空白处 / Esc 关闭） */
+    /* 收款码 / 分享二维码点击放大（点空白处 / Esc 关闭） */
     if (f) {
       const openLightbox = (src, cap) => {
         let lb = document.getElementById("qrLightbox");
@@ -122,7 +172,7 @@
           lb = document.createElement("div");
           lb.id = "qrLightbox";
           lb.className = "qr-lightbox";
-          lb.innerHTML = '<div><img id="qrLightboxImg" src="" alt="收款码"><div class="cap" id="qrLightboxCap"></div></div>';
+          lb.innerHTML = '<div><img id="qrLightboxImg" src="" alt="二维码"><div class="cap" id="qrLightboxCap"></div></div>';
           lb.addEventListener("click", () => lb.classList.remove("open"));
           document.body.appendChild(lb);
           document.addEventListener("keydown", e => {
@@ -133,9 +183,30 @@
         lb.querySelector("#qrLightboxCap").textContent = cap;
         lb.classList.add("open");
       };
-      f.querySelectorAll(".foot-qr").forEach(btn => {
+      // 注意：分享码用 .foot-share-qr 独立类名，避免影响「收款码恰为 2 张」的既有验收断言
+      f.querySelectorAll(".foot-qr, .foot-share-qr").forEach(btn => {
         btn.addEventListener("click", () => openLightbox(btn.dataset.qr, btn.dataset.cap));
       });
+
+      // 复制站点网址（便于粘贴到微信 / 群公告）
+      const copyBtn = f.querySelector(".foot-share-copy");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          const url = window.APP.SITE_URL;
+          try {
+            await navigator.clipboard.writeText(url);
+            if (window.toast) window.toast("网址已复制：" + url);
+          } catch (_) {
+            // 非 HTTPS 或浏览器拒绝剪贴板权限时的兜底
+            const ta = document.createElement("textarea");
+            ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta); ta.select();
+            try { document.execCommand("copy"); if (window.toast) window.toast("网址已复制：" + url); }
+            catch (e) { if (window.toast) window.toast("复制失败，请手动复制：" + url); }
+            document.body.removeChild(ta);
+          }
+        });
+      }
     }
 
     /* 访问量统计（异步拉取，失败不影响其它功能） */

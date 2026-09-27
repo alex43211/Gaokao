@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 志愿模拟填报 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="AI 志愿模拟填报 · 生成冲稳保方案 | 恩卓智选">
+<meta property="og:description" content="输入省份、选科与分数，智能生成「冲 · 稳 · 保」三档院校志愿方案；老高考省份按文理分科口径填报。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/plan.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI 志愿模拟填报 · 生成冲稳保方案 | 恩卓智选">
+<meta name="twitter:description" content="输入省份、选科与分数，智能生成「冲 · 稳 · 保」三档院校志愿方案；老高考省份按文理分科口径填报。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/plan.html">
+<!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -102,15 +119,27 @@ function renderBar() {
   const bar = document.getElementById("stepBar");
   bar.innerHTML = steps.map((s, i) => `
     <div class="wstep ${i === current ? "on" : ""} ${i < current ? "done" : ""}" data-i="${i}">
-      <span class="n">${i < current ? "✓" : i + 1}</span>${s.key === "subject" ? subjectStepTitle() : s.title}
-    </div>`).join("");
+      <span class="n">${i < current ? "✓" : i + 1}</span><span class="wstep-t">${s.key === "subject" ? subjectStepTitle() : s.title}</span>
+    </div>`).join("") +
+    `<div class="wstep-progress" style="width:${((current + 1) / steps.length * 100).toFixed(0)}%"></div>`;
+  /* 已完成的步骤可直接点回，方便修改前面的选择 */
+  bar.querySelectorAll(".wstep").forEach(el => {
+    el.addEventListener("click", () => {
+      const i = Number(el.dataset.i);
+      if (i === current) return;
+      if (i > current) { toast("请按顺序完成当前步骤"); return; }
+      goto(i);
+    });
+  });
 }
 function goto(i) {
   if (i < 0 || i > steps.length - 1) return;
   if (i > current && !validateStep(current)) { toast("请先完成本步骤的选择"); return; }
+  const changed = i !== current;
   current = i;
   renderBar();
   renderBody();
+  if (changed) scrollStepTop();
 }
 
 /* ================= 步骤校验与渲染 ================= */
@@ -356,10 +385,13 @@ function renderPref(body) {
 function renderDone(body) {
   const line = curLine();
   const diff = form.score - line;
+  /* 顺序很重要：先档案 → 再方案预览 → 最后才是操作按钮。
+     旧版把按钮 append 在 miniPreview 之前，手机上首屏只剩按钮，
+     再往下就是页脚收款码 —— 用户误以为「进来就要扫码付钱」。 */
   body.innerHTML = `
-    <div class="text-center" style="padding: 18px 0 6px;">
-      <div style="font-size:56px;">🧮</div>
-      <h2 style="font-size:24px; font-weight:900; margin-top:10px;">方案已就绪，预览后将生成可视化报告</h2>
+    <div class="text-center" style="padding: 8px 0 6px;">
+      <div style="font-size:44px; line-height:1">🎉</div>
+      <h2 style="font-size:22px; font-weight:900; margin-top:8px;">方案已生成，往下看你的冲稳保搭配</h2>
       <p class="muted mt-10">考生档案：${form.provFull} · ${gaokaoMode(form.prov)} · ${subjLabel(form)} · ${form.score} 分${form.isEstimate ? "（预估）" : ""}</p>
       <div class="mt-16 flex wrap gap-10" style="justify-content:center;">
         <span class="chip">参考线 ${line} 分（${lineName()}）</span>
@@ -369,6 +401,7 @@ function renderDone(body) {
       </div>
     </div>
     <div id="miniPreview" class="mt-24"></div>`;
+
   // 即时预览方案（不存 localStorage，仅展示代表院校）
   const pv = generatePlan();
   const pvEl = document.getElementById("miniPreview");
@@ -380,12 +413,15 @@ function renderDone(body) {
     };
     pvEl.innerHTML = `
       <div style="background:#f7f9ff; border:1px dashed #cddcff; border-radius:14px; padding:16px 18px;">
-        <b class="small text-brand">🔎 方案速览（点击下一步查看完整报告）</b>
+        <b class="small text-brand">🔎 方案速览</b>
         ${bucket("🔴 冲", "#7b2ff7", pv.chong)}
         ${bucket("🟢 稳", "#2a7cff", pv.wen)}
         ${bucket("🟢 保", "#17a673", pv.bao)}
+        <div class="muted small mt-10">以上为演示数据生成的院校搭配，下方按钮可打开完整可视化报告。</div>
       </div>`;
   }
+
+  /* 按钮放在内容之后 —— 用户读完方案才看到操作 */
   stepActions(body, {
     nextLabel: "📊 在新窗口打开可视化报告",
     back: true,
@@ -397,6 +433,17 @@ function renderDone(body) {
       if (!w) toast("浏览器拦截了新窗口，请允许弹窗后重试");
     }
   });
+
+  /* 切换步骤后回到顶部，避免停在上一屏的滚动位置（用户反馈的「突兀感」来源之一） */
+  scrollStepTop();
+}
+
+/* 每次换步骤都把视口带回步骤区顶部 */
+function scrollStepTop() {
+  const card = document.querySelector(".wizard-card");
+  if (!card) return;
+  const y = card.getBoundingClientRect().top + window.pageYOffset - 76;
+  window.scrollTo({ top: y < 0 ? 0 : y, behavior: "smooth" });
 }
 
 /* ================= 推荐引擎（演示版） ================= */

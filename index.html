@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>恩卓智选 · 高考志愿智能规划平台</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:description" content="用数据做一次不后悔的高考志愿选择：全国高校地图·近3年投档线、875个本科专业百科、AI 志愿模拟填报、可视化分析报告。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:description" content="用数据做一次不后悔的高考志愿选择：全国高校地图·近3年投档线、875个本科专业百科、AI 志愿模拟填报、可视化分析报告。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/">
+<!-- share-meta:end -->
 <meta name="description" content="基于就业视角的高考志愿规划平台：全国高校地图、本科专业百科、AI 志愿模拟填报、可视化分析报告。">
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
@@ -27,10 +44,24 @@
           <a class="btn btn-brand" href="plan.html">🚀 开始 AI 模拟填报</a>
           <a class="btn btn-ghost" href="majors.html">📚 先查专业百科</a>
         </div>
+
+        <!-- ===== 全局搜索：专业 / 高校一个入口 ===== -->
+        <div class="home-search" id="homeSearch">
+          <div class="home-search-input">
+            <span class="hsi">🔍</span>
+            <input id="hsInput" type="search" enterkeyhint="search" autocomplete="off"
+                   placeholder="搜专业或高校，如：精神医学、机械、中国人民大学…">
+            <button type="button" class="hs-clear" id="hsClear" aria-label="清空">✕</button>
+          </div>
+          <button class="btn btn-brand" id="hsBtn">搜索</button>
+        </div>
+        <div class="hs-hint" id="hsHint">试试：精神医学 · 机械工程 · 中国人民大学 · 临床医学</div>
+        <div class="hs-results" id="hsResults"></div>
+
         <div class="hero-trust">
           <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
           <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
-          <div class="t"><div><b>100+</b><span>院校志愿推荐库</span></div></div>
+          <div class="t"><div><b>116</b><span>院校志愿推荐库</span></div></div>
           <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
         </div>
       </div>
@@ -55,118 +86,81 @@
   <div class="container">
     <div class="section-head">
       <div class="tag">CORE FEATURES</div>
-      <h2>四大核心工具，陪你把志愿填明白</h2>
-      <p>从「看」到「聊」到「填」再到「报告」，一站式完成志愿决策闭环</p>
+      <h2>三个工具，够你把志愿想明白</h2>
+      <p>看数据 → 查专业 → 出方案，一步不多</p>
     </div>
-    <div class="grid g4">
-      <a class="feat-card" href="map.html">
-        <span class="num">01</span>
-        <div class="ico ib-brand">🗺️</div>
-        <h3>全国高校地图</h3>
-        <p>34 个省市区数据一图尽览：悬停看概览，点击进省份，高校·分数线·考生数全掌握。</p>
-        <span class="go">进入地图 →</span>
-      </a>
+    <div class="grid g3">
       <a class="feat-card" href="majors.html">
-        <span class="num">02</span>
+        <span class="num">01</span>
         <div class="ico ib-green">📚</div>
         <h3>本科专业百科</h3>
-        <p>875 个本科专业全收录（对照教育部 2026 目录），其中 65 个热门专业含课程、就业、薪资、AI 冲击深度解读与「择校视角」犀利点评。</p>
+        <p>875 个本科专业全收录（对照教育部 2026 目录）。输入专业名，直接看课程、就业、薪资、选科要求与择校点评。</p>
         <span class="go">查专业 →</span>
+      </a>
+      <a class="feat-card" href="map.html">
+        <span class="num">02</span>
+        <div class="ico ib-brand">🗺️</div>
+        <h3>全国高校地图</h3>
+        <p>点开任意省份，看 2024–2026 三年各批次投档线、报考人数，以及本地高校资源。</p>
+        <span class="go">看地图 →</span>
       </a>
       <a class="feat-card" href="plan.html">
         <span class="num">03</span>
         <div class="ico ib-accent">🧮</div>
         <h3>AI 志愿模拟填报</h3>
-        <p>输入省份、选科、分数与偏好，智能生成「冲稳保」三档院校志愿方案。</p>
+        <p>填省份、选科、分数，生成「冲稳保」三档方案，并可输出可视化报告带回家商量。</p>
         <span class="go">模拟填报 →</span>
       </a>
-      <a class="feat-card" href="report.html?demo=1">
-        <span class="num">04</span>
-        <div class="ico ib-gold">📊</div>
-        <h3>可视化分析报告</h3>
-        <p>生成专属填报报告：录取概率、专业匹配、风险提示，可打印可分享，家长学生一起看。</p>
-        <span class="go">查看样例 →</span>
-      </a>
     </div>
   </div>
 </section>
 
-<!-- ===== 小艾专区 ===== -->
-<section class="section alt" id="about">
-  <div class="container">
-    <div class="grid g2" style="align-items:center; gap:44px;">
-      <div>
-        <div class="section-head" style="text-align:left; margin:0 0 22px;">
-          <div class="tag">AI MENTOR</div>
-          <h2>小艾同学，懂志愿的 AI 助手</h2>
-        </div>
-        <p style="color:var(--ink-2); line-height:1.9;">
-          每个页面右下角都有一位「小艾」。她懂高考志愿、懂专业就业、懂普通家庭的纠结——
-          她用「就业倒推」帮你判断专业，「家庭背景分流」帮你量体裁衣，
-          「城市优先」帮你放大分数价值，还会毫不客气地提醒你哪些坑别踩。
-        </p>
-        <div class="mt-16 flex wrap gap-10">
-          <span class="chip">👩‍🎓 24小时在线</span>
-          <span class="chip green">🎯 就业视角</span>
-          <span class="chip gold">📊 数据支撑</span>
-          <span class="chip purple">💬 敢说真话</span>
-        </div>
-        <button class="btn btn-brand mt-24" id="openChatBtn">💬 现在就和 小艾 聊聊</button>
-      </div>
-      <div class="card" style="padding: 26px;">
-        <h3 style="display:flex; align-items:center; gap:8px;">🗨️ 与小艾的一段对话</h3>
-        <div class="mt-16 chat-msg bot" style="max-width:100%;">“孩子 560 分河南考生，想学金融怎么看？”</div>
-        <div class="mt-10 chat-msg user" style="max-width:100%; background:var(--brand); color:#fff;">停！先问：家里是做金融的吗？不是的话，560 河南大概率去双非学金融，毕业跟 985 抢岗拿什么抢？这个分数我更建议计算机或电气——理工科选专业，一门手艺比一张文凭实在。</div>
-        <div class="mt-10 flex wrap gap-10">
-          <span class="chip">为什么这样建议？</span>
-          <span class="chip green">就业倒推法</span>
-          <span class="chip gold">家庭背景分流</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 方法论 ===== -->
-<section class="section" id="how">
+<!-- ===== 使用权限说明 ===== -->
+<section class="section alt" id="access">
   <div class="container">
     <div class="section-head">
-      <div class="tag">METHODOLOGY</div>
-      <h2>志愿填报四步法</h2>
-      <p>不玄学、不拍脑袋，一套可执行的决策框架</p>
+      <div class="tag">ACCESS</div>
+      <h2>现在能免费用什么，以后可能要什么</h2>
+      <p>先把话说清楚：本阶段所有功能都不收费</p>
     </div>
-    <div class="grid g4">
-      <div class="card hoverable">
-        <div class="icon-bubble ib-red">1️⃣</div>
-        <h3>问家庭</h3>
-        <p>家里有没有行业资源？能支持多长的求学周期？有矿和没矿，答案完全不同——先分流再决策。</p>
+    <div class="grid g2">
+      <div class="card">
+        <h3 style="display:flex;align-items:center;gap:8px;">✅ 目前全部免费开放</h3>
+        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
+          专业百科、全国地图、近三年投档线、AI 模拟填报、可视化报告 ——
+          全部功能现在都可直接使用，<b>不需要注册，不限制次数，也没有付费墙</b>。
+        </p>
+        <div class="mt-16 flex wrap gap-10">
+          <span class="chip green">免注册</span>
+          <span class="chip green">不限次</span>
+          <span class="chip green">无付费墙</span>
+        </div>
       </div>
-      <div class="card hoverable">
-        <div class="icon-bubble ib-brand">2️⃣</div>
-        <h3>看就业</h3>
-        <p>不看宣传册，看这个专业中间 50% 毕业生 5 年后的真实去向与薪资中位数。就业倒推选专业。</p>
-      </div>
-      <div class="card hoverable">
-        <div class="icon-bubble ib-green">3️⃣</div>
-        <h3>选城市</h3>
-        <p>同等分数下，优先发达城市。城市决定思维、资源与机会密度，是分数的隐形放大器。</p>
-      </div>
-      <div class="card hoverable">
-        <div class="icon-bubble ib-gold">4️⃣</div>
-        <h3>拉梯度</h3>
-        <p>冲、稳、保三档拉开梯度，平行志愿把最想去的排前面，避免滑档与高分低就。</p>
+      <div class="card">
+        <h3 style="display:flex;align-items:center;gap:8px;">🔜 后续可能增加的区分</h3>
+        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
+          如果平台继续发展，初步设想是：<b>游客</b>可使用搜索、专业百科与地图等查询类功能；
+          <b>注册用户</b>可保存方案、查看历史记录、参与提问答疑；
+          需要针对自家情况做深度诊断的，再考虑提供一对一付费咨询。
+        </p>
+        <div class="mt-16 flex wrap gap-10">
+          <span class="chip">游客：查询类功能</span>
+          <span class="chip">注册：保存与答疑</span>
+          <span class="chip gold">付费：一对一定制</span>
+        </div>
+        <div class="demo-note mt-16">以上仅为产品规划设想，尚未实施，当前仍全部免费。</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== 热门专业速览 ===== -->
-<section class="section alt">
+<!-- ===== 热门专业速览（精简为一行快捷入口） ===== -->
+<section class="section">
   <div class="container">
     <div class="section-head">
       <div class="tag">HOT MAJORS</div>
-      <h2>大家都在问的专业</h2>
-      <p>点击卡片查看完整解读</p>
+      <h2>大家最常查的专业</h2>
+      <p>点一下直接看解读</p>
     </div>
     <div class="grid g3" id="hotMajors"></div>
   </div>
@@ -197,10 +191,81 @@
 <script src="assets/js/assistant.js"></script>
 <script>
 buildShell("home");
-document.getElementById("openChatBtn").addEventListener("click", () => {
-  const fab = document.getElementById("xiaoai-fab");
-  if (fab) fab.click();
-});
+
+/* 首页全局搜索：一个入口同时搜「专业」和「高校」，结果就地展示 */
+(function () {
+  const input = document.getElementById("hsInput");
+  const box = document.getElementById("homeSearch");
+  const results = document.getElementById("hsResults");
+  const hint = document.getElementById("hsHint");
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    box.classList.toggle("has-val", !!input.value.trim());
+  });
+  document.getElementById("hsClear").addEventListener("click", () => {
+    input.value = ""; box.classList.remove("has-val");
+    results.classList.remove("open"); results.innerHTML = "";
+    hint.style.display = ""; input.focus();
+  });
+
+  function run() {
+    const q = input.value.trim();
+    input.blur();                                  // 收起手机键盘
+    if (!q) { toast("请输入专业或高校名称"); return; }
+
+    const majors = (window.MAJORS || []).filter(m =>
+      m.name.includes(q) || (m.sub || "").includes(q) || (m.cat || "").includes(q) ||
+      (m.code || "").includes(q) || (m.tags || []).some(t => t.includes(q))
+    ).slice(0, 6);
+
+    const colleges = (window.COLLEGES || []).filter(c =>
+      c.name.includes(q) || (c.tags || []).some(t => t.includes(q)) ||
+      (c.type || "").includes(q) || (c.prov || "").includes(q)
+    ).slice(0, 6);
+
+    if (!majors.length && !colleges.length) {
+      hint.style.display = "none";
+      results.className = "hs-results open";
+      results.innerHTML = `<div class="hs-empty">没有找到「${esc(q)}」相关的专业或高校。<br>
+        <span class="muted small">换个说法试试，或直接去
+        <a href="majors.html?q=${encodeURIComponent(q)}">专业百科</a> 看看。</span></div>`;
+      return;
+    }
+
+    const mHtml = majors.map(m => `
+      <a class="hs-card" href="majors.html?q=${encodeURIComponent(m.name)}">
+        <div class="hs-card-h">
+          <b>${esc(m.name)}</b>
+          <span class="chip gray">专业</span>
+        </div>
+        <div class="hs-card-m">${esc(m.code || "")} · ${esc(m.cat)} / ${esc(m.sub || "—")} · 学制 ${m.years} 年</div>
+        <div class="hs-card-d">${esc((m.intro || "").slice(0, 58))}${(m.intro || "").length > 58 ? "…" : ""}</div>
+      </a>`).join("");
+
+    const cHtml = colleges.map(c => `
+      <a class="hs-card" href="college.html?name=${encodeURIComponent(c.name)}">
+        <div class="hs-card-h">
+          <b>${esc(c.name)}</b>
+          <span class="chip ${c.level === "985" ? "purple" : c.level === "211" ? "gold" : "gray"}">${esc(c.level)}</span>
+        </div>
+        <div class="hs-card-m">${esc(c.prov)} · ${esc(c.city)} · ${esc(c.type)}类</div>
+        <div class="hs-card-d">${esc(c.note || "")}</div>
+      </a>`).join("");
+
+    hint.style.display = "none";
+    results.className = "hs-results open";
+    results.innerHTML =
+      (majors.length ? `<div class="hs-group">📚 专业（${majors.length}）</div>${mHtml}` : "") +
+      (colleges.length ? `<div class="hs-group">🏛️ 高校（${colleges.length}）</div>${cHtml}` : "") +
+      `<div class="hs-more">
+         <a href="majors.html?q=${encodeURIComponent(q)}">在专业百科中查看全部 →</a>
+       </div>`;
+  }
+
+  document.getElementById("hsBtn").addEventListener("click", run);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); run(); } });
+})();
 
 /* 首页迷你地图（ECharts 全国填充） */
 (function () {
@@ -232,7 +297,7 @@ document.getElementById("openChatBtn").addEventListener("click", () => {
 (function () {
   const box = document.getElementById("hotMajors");
   if (!box) return;
-  const picks = ["计算机科学与技术", "临床医学", "电气工程及其自动化", "人工智能", "口腔医学", "金融学"].map(n => MAJORS.find(m => m.name === n)).filter(Boolean);
+  const picks = ["计算机科学与技术", "临床医学", "电气工程及其自动化"].map(n => MAJORS.find(m => m.name === n)).filter(Boolean);
   box.innerHTML = picks.map(m => `
     <a class="card hoverable" href="majors.html?q=${encodeURIComponent(m.name)}" style="display:block;color:inherit;cursor:pointer;">
       <div class="flex between items-center">

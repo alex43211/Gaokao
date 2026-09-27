@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高校详情 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="高校详情 · 院校层次与优势方向 | 恩卓智选">
+<meta property="og:description" content="查看院校层次、所在城市、优势学科方向与择校点评，并可直达研招网与教育部学信网官方信息。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/college.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="高校详情 · 院校层次与优势方向 | 恩卓智选">
+<meta name="twitter:description" content="查看院校层次、所在城市、优势学科方向与择校点评，并可直达研招网与教育部学信网官方信息。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/college.html">
+<!-- share-meta:end -->
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb"><a href="index.html">首页</a> / <a href="index.html">高校查询</a> / <span id="crumbName">院校详情</span></div>
+    <h1 id="colTitle">🏛️ 院校详情</h1>
+    <p id="colSub">查看院校层次、优势方向与择校点评，并提供官方信息查询入口。</p>
+  </div>
+</section>
+
+<section class="container" id="colMain" style="padding:26px 0 80px;"></section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/data-provinces.js"></script>
+<script src="assets/js/data-province-lines.js"></script>
+<script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-majors.js"></script>
+<script src="assets/js/data-majors-catalog.js"></script>
+<script src="assets/js/data-majors-merge.js"></script>
+<script src="assets/vendor/echarts.min.js"></script>
+<script src="assets/json/china.js"></script>
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("college");
+
+/* 院校名 -> 教育部学信网「阳光高考」院校库检索（官方权威入口） */
+function chsiUrl(name) {
+  return "https://gaokao.chsi.com.cn/sch/search.do?searchType=1&yxmc=" + encodeURIComponent(name);
+}
+function baiduUrl(name) {
+  return "https://www.baidu.com/s?wd=" + encodeURIComponent(name + " 官网 招生章程");
+}
+
+(function () {
+  const main = document.getElementById("colMain");
+  const name = decodeURIComponent(window.qs("name"));
+  const C = window.COLLEGES || [];
+  const col = C.find(c => c.name === name);
+
+  if (!col) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="big">🏛️</div>
+        <p>没有找到这所院校的信息。</p>
+        <p class="muted small mt-10">本站院校库目前收录 <b>116 所</b>代表性院校（985 / 211 / 双一流 / 部分实力双非）。
+        完整院校名单请以教育部与各省考试院公布为准。</p>
+        <div class="mt-24">
+          <a class="btn btn-brand" href="index.html">← 回首页搜索</a>
+          <a class="btn btn-ghost" href="map.html">看全国高校地图</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  document.title = col.name + " · 院校详情 | 恩卓智选";
+  document.getElementById("crumbName").textContent = col.name;
+  document.getElementById("colTitle").textContent = "🏛️ " + col.name;
+  document.getElementById("colSub").textContent =
+    `${col.prov} · ${col.city} · ${col.level} · ${col.type}类`;
+
+  const prov = (window.PROVINCES || {})[col.prov];
+  const lvMap = { "985": "purple", "211": "gold", "双一流": "green", "普通本": "gray" };
+
+  /* 该省高校聚合信息（用于侧栏） */
+  const sameProv = C.filter(c => c.prov === col.prov && c.name !== col.name);
+
+  main.innerHTML = `
+    <div class="report-grid" style="grid-template-columns:1fr 320px; align-items:start;">
+      <div>
+        <div class="report-card" style="margin:0 0 18px;">
+          <div class="flex between items-center wrap gap-10">
+            <div>
+              <h2 style="margin:0;font-size:22px;">${esc(col.name)}</h2>
+              <div class="muted small mt-8">${esc(col.prov)} · ${esc(col.city)} ｜ ${esc(col.type)}类 ｜ 层次 ${esc(col.level)}</div>
+            </div>
+            <span class="chip ${lvMap[col.level] || "gray"}" style="font-size:13px;padding:7px 14px;">${esc(col.level)}</span>
+          </div>
+
+          <div class="mt-16" style="padding:14px 16px;background:#f7f9ff;border:1px solid #e2e9fb;border-radius:12px;">
+            <b class="small">📌 择校视角点评</b>
+            <p class="mt-8" style="color:var(--ink-2);line-height:1.9;">${esc(col.note || "—")}</p>
+          </div>
+
+          <div class="mt-16">
+            <b class="small">🏷️ 优势方向标签</b>
+            <div class="mt-10 flex wrap gap-10">
+              ${(col.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join("")}
+            </div>
+          </div>
+
+          <div class="demo-note mt-16">
+            ⚠️ 本页院校信息为<b>演示性整理</b>（层次、城市、优势方向与点评均用于产品展示），
+            <b>不构成填报依据</b>。具体招生专业、选科要求、招生章程请以下方官方入口为准。
+          </div>
+        </div>
+
+        <!-- 官方信息入口 -->
+        <div class="report-card" style="margin:0 0 18px;">
+          <h3 style="margin:0 0 6px;font-size:17px;">🔗 官方信息查询入口</h3>
+          <p class="muted small" style="line-height:1.8;margin-bottom:14px;">
+            本站不转载也不臆造招生数据。要看这所学校最权威的信息，请走下面这些官方通道：
+          </p>
+          <div class="grid g2" style="gap:12px;">
+            <a class="link-card" href="${chsiUrl(col.name)}" target="_blank" rel="noopener noreferrer">
+              <b>🎓 阳光高考 · 院校库</b>
+              <span>教育部高校招生阳光工程指定平台，查该校招生章程、专业计划、特殊类型招生</span>
+            </a>
+            <a class="link-card" href="https://gaokao.chsi.com.cn/sch/search.do?searchType=1" target="_blank" rel="noopener noreferrer">
+              <b>📋 学信网 · 招生章程</b>
+              <span>教育部学信网统一检索各高校当年招生章程与录取规则</span>
+            </a>
+            <a class="link-card" href="${baiduUrl(col.name)}" target="_blank" rel="noopener noreferrer">
+              <b>🌐 搜索该校官网</b>
+              <span>通过搜索引擎定位学校本科招生网（.edu.cn 域名才是官方）</span>
+            </a>
+            <a class="link-card" href="plan.html">
+              <b>🧮 用这所学校模拟填报</b>
+              <span>输入你的省份与分数，看看这所学校在你的填报方案里落在冲/稳/保哪一档</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 按专业类看方向 -->
+        <div class="report-card" style="margin:0 0 18px;">
+          <h3 style="margin:0 0 6px;font-size:17px;">📚 按学科门类看专业方向</h3>
+          <p class="muted small" style="line-height:1.8;margin-bottom:14px;">
+            先选门类，再看该门类下有哪些专业可读。点击可直接跳到专业百科查看课程、就业与选科要求。
+          </p>
+          <div id="catBtns" class="flex wrap gap-10"></div>
+          <div id="catMajors" class="grid g3 mt-16"></div>
+        </div>
+
+        <!-- 同省院校 -->
+        ${sameProv.length ? `
+        <div class="report-card" style="margin:0;">
+          <h3 style="margin:0 0 12px;font-size:17px;">🏙️ ${esc(col.prov)} 的其他院校（${sameProv.length} 所）</h3>
+          <div class="flex wrap gap-10">
+            ${sameProv.map(c => `<a class="chip" href="college.html?name=${encodeURIComponent(c.name)}"
+                style="border:1px solid var(--line);background:#fff;padding:7px 13px;">${esc(c.name)}<span class="muted"> · ${esc(c.level)}</span></a>`).join("")}
+          </div>
+        </div>` : ""}
+      </div>
+
+      <!-- 侧栏 -->
+      <div class="side-panel">
+        <div class="side-stat-card">
+          <h4>📊 院校速览</h4>
+          <div class="stat-mini"><span>所在省份</span><span class="v">${esc(col.prov)}</span></div>
+          <div class="stat-mini"><span>所在城市</span><span class="v">${esc(col.city)}</span></div>
+          <div class="stat-mini"><span>院校层次</span><span class="v">${esc(col.level)}</span></div>
+          <div class="stat-mini"><span>院校类型</span><span class="v">${esc(col.type)}类</span></div>
+          <div class="stat-mini"><span>本地高校(库内)</span><span class="v">${C.filter(c => c.prov === col.prov).length} 所</span></div>
+        </div>
+
+        ${prov ? `
+        <div class="side-stat-card">
+          <h4>🗺️ 该省高考情况</h4>
+          <div class="stat-mini"><span>高考模式</span><span class="v">${esc(prov.gaokao || "—")}</span></div>
+          <div class="stat-mini"><span>普通高校</span><span class="v">约 ${prov.univs} 所</span></div>
+          <div class="stat-mini"><span>双一流</span><span class="v">${prov.doubleFirst} 所</span></div>
+          <div class="mt-16"><a class="btn btn-ghost btn-sm" style="width:100%" href="province.html?p=${encodeURIComponent(prov.full || col.prov)}">查看该省分数线 →</a></div>
+        </div>` : ""}
+
+        <div class="side-stat-card" style="background:linear-gradient(135deg,#1d2b64,#2456e6);color:#fff;border:none;">
+          <h4 style="color:rgba(255,255,255,.75)">💡 择校提醒</h4>
+          <p style="font-size:13px;line-height:1.9;color:rgba(255,255,255,.92)">
+            院校层次只解决「门槛」，不解决「出路」。同一所学校里，王牌专业和边缘专业的
+            就业差距可能比两所学校之间还大——先定专业方向，再挑学校。
+          </p>
+        </div>
+      </div>
+    </div>`;
+
+  /* 学科门类 -> 专业浏览 */
+  const CATS = window.MAJOR_CATS || {};
+  const catNames = Object.keys(CATS);
+  const btnBox = document.getElementById("catBtns");
+  const grid = document.getElementById("catMajors");
+
+  function showCat(cat) {
+    btnBox.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.cat === cat));
+    const list = (CATS[cat] || []).slice(0, 12);
+    grid.innerHTML = list.map(m => `
+      <a class="major-card" href="majors.html?q=${encodeURIComponent(m.name)}" style="text-decoration:none;">
+        <div class="top">
+          <div>
+            <h3>${esc(m.name)}</h3>
+            <div class="cat">${esc(m.code)} · ${esc(m.sub || "—")}</div>
+          </div>
+        </div>
+        <div class="major-meta">
+          <span>学制 <b>${m.years} 年</b></span>
+          <span>选科 <b>${esc(m.req || "不限")}</b></span>
+        </div>
+      </a>`).join("") +
+      `<div class="muted small" style="grid-column:1/-1">
+         以上为该门类前 12 个专业。完整目录请到 <a href="majors.html" style="color:var(--brand)">专业百科</a> 查看。
+       </div>`;
+  }
+
+  if (!catNames.length) {
+    document.getElementById("catBtns").innerHTML = '<span class="muted small">专业门类数据加载中…</span>';
+  } else {
+    const prefer = ["工学", "医学", "经济学", "管理学", "理学", "文学", "法学"];
+    const ordered = prefer.filter(c => catNames.includes(c)).concat(catNames.filter(c => !prefer.includes(c)));
+    btnBox.innerHTML = ordered.map(c =>
+      `<button type="button" class="ft" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+    btnBox.querySelectorAll("button").forEach(b =>
+      b.addEventListener("click", () => showCat(b.dataset.cat)));
+    showCat(ordered[0]);
+  }
+})();
+</script>
+</body>
+</html>

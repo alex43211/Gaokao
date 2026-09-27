@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>全国高校地图 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="全国高校地图 · 近3年投档线 | 恩卓智选">
+<meta property="og:description" content="34 个省市区一图尽览，点击省份即可查看 2024/2025/2026 各批次投档线与报考人数，人数口径随高考模式自适应。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/map.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="全国高校地图 · 近3年投档线 | 恩卓智选">
+<meta name="twitter:description" content="34 个省市区一图尽览，点击省份即可查看 2024/2025/2026 各批次投档线与报考人数，人数口径随高考模式自适应。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/map.html">
+<!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -185,7 +202,8 @@ function renderLineCard() {
   const special = PL_SPECIAL[selProv];
   const prov = PROVINCES[selProv] || {};
   const head = `<div class="lp-picked"><b>${esc2(prov.full || selProv)}</b>
-      <span class="chip purple">${esc2(item ? (MODE_TXT[item.mode] || item.mode) : (prov.gaokao || "—"))}</span></div>`;
+      <span class="chip purple">${esc2(item ? (MODE_TXT[item.mode] || item.mode) : (prov.gaokao || "—"))}</span></div>
+    <div class="lp-picked-sub">普通高校约 <b>${prov.univs || "—"}</b> 所 · 双一流 <b>${prov.doubleFirst || "—"}</b> 所</div>`;
 
   /* 港澳台：不参加内地统一高考 */
   if (!item) {
@@ -228,9 +246,18 @@ function selectProv(short) {
   if (selProv !== short) lineOpen = false;
   selProv = short;
   renderLineCard();
-  if (window.innerWidth <= 1020) {
-    const c = document.getElementById("lineCard");
-    if (c) c.scrollIntoView({ behavior: "smooth", block: "start" });
+  markSelectedOnMap(short);          // 地图上高亮选中的省，给用户「点到了」的反馈
+  const prov = PROVINCES[short];
+  if (window.toast) {
+    toast(`已选中 ${prov ? prov.full : short}${prov && prov.gaokao ? "（" + prov.gaokao + "）" : ""}，下方已展示近3年投档线`);
+  }
+  // 手机上侧栏在地图下方，必须把它滚进视野，否则用户以为「点了没反应」
+  const c = document.getElementById("lineCard");
+  if (c) {
+    const narrow = window.innerWidth <= 1020;
+    c.scrollIntoView({ behavior: "smooth", block: narrow ? "start" : "nearest" });
+    c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+    setTimeout(() => c.classList.remove("flash"), 1200);
   }
 }
 
@@ -247,9 +274,11 @@ renderLineCard();
 /* ============================================================
    主地图
    ============================================================ */
+let mapChart = null;   // 供 markSelectedOnMap 调用
 (function () {
   const el = document.getElementById("chinaMap");
   const chart = echarts.init(el);
+  mapChart = chart;
   echarts.registerMap("china", window.CHINA_GEO);
 
   const data = Object.values(PROVINCES).map(p => ({
@@ -314,6 +343,20 @@ renderLineCard();
   chart.on("mouseout", () => (document.body.style.cursor = "default"));
   window.addEventListener("resize", () => chart.resize());
 })();
+
+/* 在地图上高亮「当前选中的省份」，让点击有明确反馈。
+   注意：ECharts 的 map series 默认不支持「点击后保持选中」，
+   这里用 dispatchAction 的 highlight/showTip 做视觉反馈即可，不改动数据。 */
+function markSelectedOnMap(short) {
+  if (!mapChart) return;
+  const prov = PROVINCES[short];
+  if (!prov) return;
+  try {
+    mapChart.dispatchAction({ type: "downplay", seriesIndex: 0 });
+    mapChart.dispatchAction({ type: "highlight", seriesIndex: 0, name: prov.full });
+    mapChart.dispatchAction({ type: "showTip", seriesIndex: 0, name: prov.full });
+  } catch (_) { /* 个别版本不支持 showTip，不影响主流程 */ }
+}
 </script>
 </body>
 </html>
