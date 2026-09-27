@@ -12,7 +12,7 @@
     { id: "home",    label: "首页",        href: "index.html" },
     { id: "map",     label: "全国地图",    href: "map.html" },
     { id: "majors",  label: "专业百科",    href: "majors.html" },
-    { id: "college", label: "高校查询",    href: "college.html" },
+    { id: "college", label: "高校查询",    href: "colleges.html" },
     { id: "plan",    label: "AI 志愿填报", href: "plan.html" },
   ];
   const SUBS = [
@@ -81,7 +81,7 @@
               <h4>功能导航</h4>
               <a href="map.html">全国高校地图</a>
               <a href="majors.html">本科专业百科</a>
-              <a href="college.html">高校查询</a>
+              <a href="colleges.html">全国高校名单</a>
               <a href="plan.html">AI 志愿模拟填报</a>
             </div>
             <div>

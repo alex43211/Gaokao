@@ -42,6 +42,7 @@
 <script src="assets/js/data-provinces.js"></script>
 <script src="assets/js/data-province-lines.js"></script>
 <script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-colleges-all.js"></script>
 <script src="assets/js/data-majors.js"></script>
 <script src="assets/js/data-majors-catalog.js"></script>
 <script src="assets/js/data-majors-merge.js"></script>
@@ -60,39 +61,65 @@ function chsiUrl(name) {
 function baiduUrl(name) {
   return "https://www.baidu.com/s?wd=" + encodeURIComponent(name + " 官网 招生章程");
 }
+/* 归一化校名，兼容半角/全角括号 */
+function normName(s) {
+  return String(s || "").replace(/（/g, "(").replace(/）/g, ")").replace(/\s/g, "");
+}
 
 (function () {
   const main = document.getElementById("colMain");
   const name = decodeURIComponent(window.qs("name"));
-  const C = window.COLLEGES || [];
-  const col = C.find(c => c.name === name);
+  const C = window.COLLEGES || [];             // 116 所精英院校（含点评/标签/参考分）
+  const ALL = window.COLLEGES_ALL || [];       // 教育部 2952 所完整名单
 
-  if (!col) {
+  /* 先在完整名单里找（覆盖所有正规院校），再回落到精英库 */
+  const all = ALL.find(c => normName(c.name) === normName(name));
+  const col = C.find(c => normName(c.name) === normName(name)) || (all && all.elite
+    ? Object.assign({}, all.elite, { name: all.name, prov: all.prov, city: all.city, level: all.tier })
+    : null);
+
+  if (!all && !col) {
     main.innerHTML = `
       <div class="empty-state">
         <div class="big">🏛️</div>
-        <p>没有找到这所院校的信息。</p>
-        <p class="muted small mt-10">本站院校库目前收录 <b>116 所</b>代表性院校（985 / 211 / 双一流 / 部分实力双非）。
-        完整院校名单请以教育部与各省考试院公布为准。</p>
+        <p>没有找到「<b>${esc(name)}</b>」这所院校。</p>
+        <p class="muted small mt-10">本站院校库照录教育部《全国高等学校名单》全部 <b>2952 所</b>普通高校
+        （本科 1412 所 + 高职专科 1540 所）。<br>如果这里查不到，可能是：① 名称有出入（试试简称或去掉括号里的校区名）；
+        ② 属于成人高校（244 所，不在本名单内）；③ 港澳台地区高校（本名单未包含）。</p>
         <div class="mt-24">
-          <a class="btn btn-brand" href="index.html">← 回首页搜索</a>
+          <a class="btn btn-brand" href="colleges.html">← 去全国高校名单搜索</a>
           <a class="btn btn-ghost" href="map.html">看全国高校地图</a>
         </div>
       </div>`;
     return;
   }
 
-  document.title = col.name + " · 院校详情 | 恩卓智选";
-  document.getElementById("crumbName").textContent = col.name;
-  document.getElementById("colTitle").textContent = "🏛️ " + col.name;
+  /* —— 展示用的合并字段：优先官方名单，补充精英库点评 —— */
+  const dName  = all ? all.name  : col.name;
+  const dProv  = (all && all.prov) || col.prov || "";
+  const dCity  = (all && all.city) || col.city || "";
+  const dLevel = (all && all.tier) || col.level || "";
+  const dType  = (col && col.type) || "—";
+  const dCode  = all ? all.code : "";
+  const dDept  = all ? all.dept : "";
+  const dLen   = all ? all.level : "";        // 本科 / 专科
+  const dRemark= all ? all.remark : "";
+
+  document.title = dName + " · 院校详情 | 恩卓智选";
+  document.getElementById("crumbName").textContent = dName;
+  document.getElementById("colTitle").textContent = "🏛️ " + dName;
   document.getElementById("colSub").textContent =
-    `${col.prov} · ${col.city} · ${col.level} · ${col.type}类`;
+    `${dProv} · ${dCity}` + (dLevel ? ` · ${dLevel}` : "") + (all ? ` · ${dLen}` : "");
 
-  const prov = (window.PROVINCES || {})[col.prov];
-  const lvMap = { "985": "purple", "211": "gold", "双一流": "green", "普通本": "gray" };
+  const prov = (window.PROVINCES || {})[dProv];
+  const lvMap = { "985": "purple", "211": "gold", "双一流": "green", "普通本": "gray", "专科": "gray" };
 
-  /* 该省高校聚合信息（用于侧栏） */
-  const sameProv = C.filter(c => c.prov === col.prov && c.name !== col.name);
+  /* 同省院校：优先取官方名单里的同省院校 */
+  const sameProvPool = all ? ALL.filter(c => c.prov === dProv && c.name !== dName) : C.filter(c => c.prov === dProv && c.name !== dName);
+  const sameProv = sameProvPool.slice(0, 40);
+  const sameProvTotal = sameProvPool.length;
+
+  const hasElite = col && col.note;
 
   main.innerHTML = `
     <div class="report-grid" style="grid-template-columns:1fr 320px; align-items:start;">
@@ -100,27 +127,61 @@ function baiduUrl(name) {
         <div class="report-card" style="margin:0 0 18px;">
           <div class="flex between items-center wrap gap-10">
             <div>
-              <h2 style="margin:0;font-size:22px;">${esc(col.name)}</h2>
-              <div class="muted small mt-8">${esc(col.prov)} · ${esc(col.city)} ｜ ${esc(col.type)}类 ｜ 层次 ${esc(col.level)}</div>
+              <h2 style="margin:0;font-size:22px;">${esc(dName)}</h2>
+              <div class="muted small mt-8">
+                ${esc(dCity)}${dProv ? "（" + esc(dProv) + "）" : ""}
+                ${dCode ? " ｜ 学校标识码 " + esc(dCode) : ""}
+              </div>
             </div>
-            <span class="chip ${lvMap[col.level] || "gray"}" style="font-size:13px;padding:7px 14px;">${esc(col.level)}</span>
+            ${dLevel ? `<span class="chip ${lvMap[dLevel] || "gray"}" style="font-size:13px;padding:7px 14px;">${esc(dLevel)}</span>` : ""}
           </div>
 
+          <!-- 官方登记信息（照录教育部名单，可核验） -->
+          ${all ? `
           <div class="mt-16" style="padding:14px 16px;background:#f7f9ff;border:1px solid #e2e9fb;border-radius:12px;">
-            <b class="small">📌 择校视角点评</b>
-            <p class="mt-8" style="color:var(--ink-2);line-height:1.9;">${esc(col.note || "—")}</p>
-          </div>
+            <b class="small">📋 教育部官方登记信息</b>
+            <div class="grid g2 mt-10" style="gap:8px 20px;">
+              <div class="stat-mini"><span>学校名称</span><span class="v">${esc(all.name)}</span></div>
+              <div class="stat-mini"><span>学校标识码</span><span class="v" style="font-family:ui-monospace,Menlo,Consolas,monospace;">${esc(all.code)}</span></div>
+              <div class="stat-mini"><span>主管部门</span><span class="v">${esc(all.dept)}</span></div>
+              <div class="stat-mini"><span>所在地</span><span class="v">${esc(all.city)}</span></div>
+              <div class="stat-mini"><span>办学层次</span><span class="v">${esc(all.level)}</span></div>
+              <div class="stat-mini"><span>办学性质</span><span class="v">${esc(all.remark || "公办")}</span></div>
+            </div>
+            <p class="muted small mt-10" style="margin-bottom:0;">
+              以上照录教育部《全国高等学校名单》（截至 2026年6月17日）。
+              标识码前 5 位为省级行政区与办学类型代码，后 5 位为校内序号。
+            </p>
+          </div>` : ""}
 
+          ${hasElite ? `
+          <div class="mt-16" style="padding:14px 16px;background:#fff9ef;border:1px solid #ffe3bf;border-radius:12px;">
+            <b class="small">📌 择校视角点评</b>
+            <p class="mt-8" style="color:var(--ink-2);line-height:1.9;">${esc(col.note)}</p>
+          </div>` : ""}
+
+          ${col && (col.tags || []).length ? `
           <div class="mt-16">
             <b class="small">🏷️ 优势方向标签</b>
             <div class="mt-10 flex wrap gap-10">
-              ${(col.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join("")}
+              ${col.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}
             </div>
-          </div>
+          </div>` : ""}
+
+          ${col && col.ref ? `
+          <div class="mt-16">
+            <b class="small">📈 参考分档（新高考 750 制 · 演示值）</b>
+            <div class="mt-10">
+              <span class="chip purple" style="font-size:13px;padding:6px 14px;">参考线 ≈ ${col.ref} 分</span>
+              ${col.hot ? `<span class="chip" style="font-size:13px;padding:6px 14px;margin-left:8px;">热度 ${"🔥".repeat(Math.min(col.hot, 5))}</span>` : ""}
+            </div>
+          </div>` : ""}
 
           <div class="demo-note mt-16">
-            ⚠️ 本页院校信息为<b>演示性整理</b>（层次、城市、优势方向与点评均用于产品展示），
-            <b>不构成填报依据</b>。具体招生专业、选科要求、招生章程请以下方官方入口为准。
+            ${hasElite
+              ? "⚠️ 院校层次、优势方向与点评为<b>演示性整理</b>，不构成填报依据；<b>官方登记信息</b>一节照录教育部名单，可核验。"
+              : "⚠️ 本页展示的是教育部名单中的<b>官方登记信息</b>（校名、标识码、主管部门、所在地、办学层次），可核验。"}
+            具体招生专业、选科要求、招生章程请以下方官方入口为准。
           </div>
         </div>
 
@@ -131,7 +192,7 @@ function baiduUrl(name) {
             本站不转载也不臆造招生数据。要看这所学校最权威的信息，请走下面这些官方通道：
           </p>
           <div class="grid g2" style="gap:12px;">
-            <a class="link-card" href="${chsiUrl(col.name)}" target="_blank" rel="noopener noreferrer">
+            <a class="link-card" href="${chsiUrl(dName)}" target="_blank" rel="noopener noreferrer">
               <b>🎓 阳光高考 · 院校库</b>
               <span>教育部高校招生阳光工程指定平台，查该校招生章程、专业计划、特殊类型招生</span>
             </a>
@@ -139,7 +200,7 @@ function baiduUrl(name) {
               <b>📋 学信网 · 招生章程</b>
               <span>教育部学信网统一检索各高校当年招生章程与录取规则</span>
             </a>
-            <a class="link-card" href="${baiduUrl(col.name)}" target="_blank" rel="noopener noreferrer">
+            <a class="link-card" href="${baiduUrl(dName)}" target="_blank" rel="noopener noreferrer">
               <b>🌐 搜索该校官网</b>
               <span>通过搜索引擎定位学校本科招生网（.edu.cn 域名才是官方）</span>
             </a>
@@ -163,10 +224,13 @@ function baiduUrl(name) {
         <!-- 同省院校 -->
         ${sameProv.length ? `
         <div class="report-card" style="margin:0;">
-          <h3 style="margin:0 0 12px;font-size:17px;">🏙️ ${esc(col.prov)} 的其他院校（${sameProv.length} 所）</h3>
+          <h3 style="margin:0 0 12px;font-size:17px;">🏙️ ${esc(dProv)} 的其他院校（共 ${sameProvTotal} 所${sameProvTotal > sameProv.length ? "，显示前 " + sameProv.length + " 所" : ""}）</h3>
           <div class="flex wrap gap-10">
             ${sameProv.map(c => `<a class="chip" href="college.html?name=${encodeURIComponent(c.name)}"
-                style="border:1px solid var(--line);background:#fff;padding:7px 13px;">${esc(c.name)}<span class="muted"> · ${esc(c.level)}</span></a>`).join("")}
+                style="border:1px solid var(--line);background:#fff;padding:7px 13px;">${esc(c.name)}<span class="muted"> · ${esc(c.tier || c.level)}</span></a>`).join("")}
+          </div>
+          <div class="mt-16">
+            <a class="btn btn-ghost btn-sm" href="colleges.html?q=${encodeURIComponent("")}">在 ${esc(dProv)} 全部院校中筛选 →</a>
           </div>
         </div>` : ""}
       </div>
@@ -175,11 +239,13 @@ function baiduUrl(name) {
       <div class="side-panel">
         <div class="side-stat-card">
           <h4>📊 院校速览</h4>
-          <div class="stat-mini"><span>所在省份</span><span class="v">${esc(col.prov)}</span></div>
-          <div class="stat-mini"><span>所在城市</span><span class="v">${esc(col.city)}</span></div>
-          <div class="stat-mini"><span>院校层次</span><span class="v">${esc(col.level)}</span></div>
-          <div class="stat-mini"><span>院校类型</span><span class="v">${esc(col.type)}类</span></div>
-          <div class="stat-mini"><span>本地高校(库内)</span><span class="v">${C.filter(c => c.prov === col.prov).length} 所</span></div>
+          <div class="stat-mini"><span>所在省份</span><span class="v">${esc(dProv || "—")}</span></div>
+          <div class="stat-mini"><span>所在城市</span><span class="v">${esc(dCity || "—")}</span></div>
+          <div class="stat-mini"><span>办学层次</span><span class="v">${esc(dLen || "—")}</span></div>
+          ${dLevel ? `<div class="stat-mini"><span>层次标签</span><span class="v">${esc(dLevel)}</span></div>` : ""}
+          <div class="stat-mini"><span>办学性质</span><span class="v">${esc(dRemark || "公办")}</span></div>
+          <div class="stat-mini"><span>主管部门</span><span class="v">${esc(dDept || "—")}</span></div>
+          <div class="stat-mini"><span>本地高校(全省)</span><span class="v">${all ? ALL.filter(c => c.prov === dProv).length : C.filter(c => c.prov === dProv).length} 所</span></div>
         </div>
 
         ${prov ? `
@@ -188,7 +254,7 @@ function baiduUrl(name) {
           <div class="stat-mini"><span>高考模式</span><span class="v">${esc(prov.gaokao || "—")}</span></div>
           <div class="stat-mini"><span>普通高校</span><span class="v">约 ${prov.univs} 所</span></div>
           <div class="stat-mini"><span>双一流</span><span class="v">${prov.doubleFirst} 所</span></div>
-          <div class="mt-16"><a class="btn btn-ghost btn-sm" style="width:100%" href="province.html?p=${encodeURIComponent(prov.full || col.prov)}">查看该省分数线 →</a></div>
+          <div class="mt-16"><a class="btn btn-ghost btn-sm" style="width:100%" href="province.html?p=${encodeURIComponent(prov.full || dProv)}">查看该省分数线 →</a></div>
         </div>` : ""}
 
         <div class="side-stat-card" style="background:linear-gradient(135deg,#1d2b64,#2456e6);color:#fff;border:none;">
@@ -243,3 +309,4 @@ function baiduUrl(name) {
 </script>
 </body>
 </html>
+

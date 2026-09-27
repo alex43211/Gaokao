@@ -61,7 +61,7 @@
         <div class="hero-trust">
           <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
           <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
-          <div class="t"><div><b>116</b><span>院校志愿推荐库</span></div></div>
+          <div class="t"><div><b id="heroCollegeTotal">2952</b><span>全国高校全名单<br>(教育部 2026)</span></div></div>
           <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
         </div>
       </div>
@@ -86,8 +86,8 @@
   <div class="container">
     <div class="section-head">
       <div class="tag">CORE FEATURES</div>
-      <h2>三个工具，够你把志愿想明白</h2>
-      <p>看数据 → 查专业 → 出方案，一步不多</p>
+      <h2>四个工具，够你把志愿想明白</h2>
+      <p>看数据 → 查专业 → 查学校 → 出方案，一步不多</p>
     </div>
     <div class="grid g3">
       <a class="feat-card" href="majors.html">
@@ -97,16 +97,23 @@
         <p>875 个本科专业全收录（对照教育部 2026 目录）。输入专业名，直接看课程、就业、薪资、选科要求与择校点评。</p>
         <span class="go">查专业 →</span>
       </a>
-      <a class="feat-card" href="map.html">
+      <a class="feat-card" href="colleges.html">
         <span class="num">02</span>
+        <div class="ico ib-accent">🏛️</div>
+        <h3>全国高校名单</h3>
+        <p>完整收录教育部《全国高等学校名单》2952 所院校（本科 1412 + 专科 1540）。按校名、学校标识码、省份、层次查询，点进看官方登记信息。</p>
+        <span class="go">查学校 →</span>
+      </a>
+      <a class="feat-card" href="map.html">
+        <span class="num">03</span>
         <div class="ico ib-brand">🗺️</div>
         <h3>全国高校地图</h3>
         <p>点开任意省份，看 2024–2026 三年各批次投档线、报考人数，以及本地高校资源。</p>
         <span class="go">看地图 →</span>
       </a>
       <a class="feat-card" href="plan.html">
-        <span class="num">03</span>
-        <div class="ico ib-accent">🧮</div>
+        <span class="num">04</span>
+        <div class="ico ib-brand">🧮</div>
         <h3>AI 志愿模拟填报</h3>
         <p>填省份、选科、分数，生成「冲稳保」三档方案，并可输出可视化报告带回家商量。</p>
         <span class="go">模拟填报 →</span>
@@ -184,6 +191,7 @@
 <script src="assets/js/data-majors-catalog.js"></script>
 <script src="assets/js/data-majors-merge.js"></script>
 <script src="assets/js/data-colleges.js"></script>
+<script src="assets/js/data-colleges-all.js"></script>
 <script src="assets/vendor/echarts.min.js"></script>
 <script src="assets/json/china.js"></script>
 <script src="assets/js/kb.js"></script>
@@ -219,9 +227,9 @@ buildShell("home");
       (m.code || "").includes(q) || (m.tags || []).some(t => t.includes(q))
     ).slice(0, 6);
 
-    const colleges = (window.COLLEGES || []).filter(c =>
-      c.name.includes(q) || (c.tags || []).some(t => t.includes(q)) ||
-      (c.type || "").includes(q) || (c.prov || "").includes(q)
+    const colleges = (window.COLLEGES_ALL || window.COLLEGES || []).filter(c =>
+      c.name.includes(q) || (c.code || "").includes(q) || (c.city || "").includes(q) ||
+      (c.dept || "").includes(q) || c.prov === q || (c.elite && (c.elite.tags || []).some(t => t.includes(q)))
     ).slice(0, 6);
 
     if (!majors.length && !colleges.length) {
@@ -229,7 +237,8 @@ buildShell("home");
       results.className = "hs-results open";
       results.innerHTML = `<div class="hs-empty">没有找到「${esc(q)}」相关的专业或高校。<br>
         <span class="muted small">换个说法试试，或直接去
-        <a href="majors.html?q=${encodeURIComponent(q)}">专业百科</a> 看看。</span></div>`;
+        <a href="majors.html?q=${encodeURIComponent(q)}">专业百科</a>、
+        <a href="colleges.html?q=${encodeURIComponent(q)}">高校名单</a> 看看。</span></div>`;
       return;
     }
 
@@ -243,15 +252,22 @@ buildShell("home");
         <div class="hs-card-d">${esc((m.intro || "").slice(0, 58))}${(m.intro || "").length > 58 ? "…" : ""}</div>
       </a>`).join("");
 
-    const cHtml = colleges.map(c => `
+    const cHtml = colleges.map(c => {
+      const tier = c.tier || c.level || "";
+      const cls = tier === "985" ? "purple" : (tier === "211" || tier === "双一流") ? "gold" : "gray";
+      const sub = c.code
+        ? `${esc(c.city)} · 标识码 ${esc(c.code)}`
+        : `${esc(c.prov)} · ${esc(c.city)} · ${esc(c.type || "")}类`;
+      const desc = (c.elite && c.elite.note) || c.note || "";
+      return `
       <a class="hs-card" href="college.html?name=${encodeURIComponent(c.name)}">
         <div class="hs-card-h">
           <b>${esc(c.name)}</b>
-          <span class="chip ${c.level === "985" ? "purple" : c.level === "211" ? "gold" : "gray"}">${esc(c.level)}</span>
+          <span class="chip ${cls}">${esc(tier)}</span>
         </div>
-        <div class="hs-card-m">${esc(c.prov)} · ${esc(c.city)} · ${esc(c.type)}类</div>
-        <div class="hs-card-d">${esc(c.note || "")}</div>
-      </a>`).join("");
+        <div class="hs-card-m">${sub}</div>
+        ${desc ? `<div class="hs-card-d">${esc(desc)}</div>` : ""}
+      </a>`; }).join("");
 
     hint.style.display = "none";
     results.className = "hs-results open";
@@ -260,6 +276,7 @@ buildShell("home");
       (colleges.length ? `<div class="hs-group">🏛️ 高校（${colleges.length}）</div>${cHtml}` : "") +
       `<div class="hs-more">
          <a href="majors.html?q=${encodeURIComponent(q)}">在专业百科中查看全部 →</a>
+         <a href="colleges.html?q=${encodeURIComponent(q)}">在高校名单中查看全部 →</a>
        </div>`;
   }
 
