@@ -24,58 +24,95 @@
 <meta name="description" content="基于就业视角的高考志愿规划平台：全国高校地图、本科专业百科、AI 志愿模拟填报、可视化分析报告。">
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
 <div id="siteHeader"></div>
 
-<!-- ===== Hero ===== -->
-<section class="hero">
+<!-- ===== Hero：搜索优先 ===== -->
+<section class="hero hero--search">
   <div class="container">
-    <div class="hero-grid">
+    <div class="search-first">
+      <span class="hero-eyebrow">🧭 选择比努力更重要 · 以就业视角倒推志愿</span>
+      <h1>先搜一搜，<span class="hl">再决定报什么</span></h1>
+      <p class="hero-sub">
+        输入一个专业、一所学校，或者一个你听说的行业 ——
+        立刻看到它学什么、去哪工作、值不值得报。
+      </p>
+
+      <!-- ===== 全局搜索：专业 / 高校一个入口 ===== -->
+      <div class="home-search home-search--xl" id="homeSearch">
+        <div class="home-search-input">
+          <span class="hsi">🔍</span>
+          <input id="hsInput" type="search" enterkeyhint="search" autocomplete="off"
+                 placeholder="搜专业或高校，如：精神医学、机械、中国人民大学…">
+          <button type="button" class="hs-clear" id="hsClear" aria-label="清空">✕</button>
+        </div>
+        <button class="btn btn-brand" id="hsBtn">搜索</button>
+      </div>
+
+      <div class="quick-tags" id="quickTags">
+        <span class="qt-lb">大家都在搜</span>
+        <button type="button" data-q="精神医学">精神医学</button>
+        <button type="button" data-q="计算机">计算机</button>
+        <button type="button" data-q="临床医学">临床医学</button>
+        <button type="button" data-q="电气工程">电气工程</button>
+        <button type="button" data-q="清华大学">清华大学</button>
+        <button type="button" data-q="浙江">浙江</button>
+      </div>
+
+      <div class="hs-hint" id="hsHint">试试：精神医学 · 机械工程 · 中国人民大学 · 临床医学</div>
+      <div class="hs-results" id="hsResults"></div>
+
+      <div class="hero-cta">
+        <a class="btn btn-brand" href="plan.html">🚀 开始 AI 模拟填报</a>
+        <a class="btn btn-ghost" href="majors.html">📚 先查专业百科</a>
+      </div>
+
+      <div class="hero-trust">
+        <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
+        <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
+        <div class="t"><div><b id="heroCollegeTotal">2952</b><span>全国高校全名单<br>(教育部 2026)</span></div></div>
+        <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 数据总览（原首屏右侧视觉卡下沉到这里） ===== -->
+<section class="section" style="padding:44px 0 6px;">
+  <div class="container">
+    <div class="grid g2" style="align-items:center; gap:34px;">
       <div>
-        <span class="hero-eyebrow">🧭 选择比努力更重要 · 以就业视角倒推志愿</span>
-        <h1>分数只决定起点，<br><span class="hl">选择决定你能走多远</span></h1>
-        <p class="hero-sub">
-          高考志愿，是多数普通家庭孩子人生的第一次重大决策。
-          我们帮你把「专业、院校、城市、就业」放到同一张桌子上，
-          用数据而不是感觉，做一次不后悔的选择。
-        </p>
-        <div class="hero-cta">
-          <a class="btn btn-brand" href="plan.html">🚀 开始 AI 模拟填报</a>
-          <a class="btn btn-ghost" href="majors.html">📚 先查专业百科</a>
+        <div class="section-head" style="text-align:left; max-width:none; margin-bottom:18px;">
+          <div class="tag">DATA OVERVIEW</div>
+          <h2>数据先摆出来，再谈建议</h2>
+          <p>覆盖 34 个省市区近三年各批次录取控制分数线与报考人数，以及全国高校与本科专业全名单。</p>
         </div>
-
-        <!-- ===== 全局搜索：专业 / 高校一个入口 ===== -->
-        <div class="home-search" id="homeSearch">
-          <div class="home-search-input">
-            <span class="hsi">🔍</span>
-            <input id="hsInput" type="search" enterkeyhint="search" autocomplete="off"
-                   placeholder="搜专业或高校，如：精神医学、机械、中国人民大学…">
-            <button type="button" class="hs-clear" id="hsClear" aria-label="清空">✕</button>
+        <div class="grid g2" style="gap:12px;">
+          <div class="card" style="padding:15px 17px;">
+            <div style="font-size:23px;font-weight:900;line-height:1.2;">2952<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 所</span></div>
+            <div class="muted small">教育部全国高等学校名单</div>
           </div>
-          <button class="btn btn-brand" id="hsBtn">搜索</button>
-        </div>
-        <div class="hs-hint" id="hsHint">试试：精神医学 · 机械工程 · 中国人民大学 · 临床医学</div>
-        <div class="hs-results" id="hsResults"></div>
-
-        <div class="hero-trust">
-          <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
-          <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
-          <div class="t"><div><b id="heroCollegeTotal">2952</b><span>全国高校全名单<br>(教育部 2026)</span></div></div>
-          <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
+          <div class="card" style="padding:15px 17px;">
+            <div style="font-size:23px;font-weight:900;line-height:1.2;">147<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 所</span></div>
+            <div class="muted small">第二轮「双一流」建设高校</div>
+          </div>
+          <div class="card" style="padding:15px 17px;">
+            <div style="font-size:23px;font-weight:900;line-height:1.2;">875<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 个</span></div>
+            <div class="muted small">本科专业（2026 目录）</div>
+          </div>
+          <div class="card" style="padding:15px 17px;">
+            <div style="font-size:23px;font-weight:900;line-height:1.2;">3<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 年</span></div>
+            <div class="muted small">2024–2026 投档线覆盖</div>
+          </div>
         </div>
       </div>
-      <div class="hero-visual">
-        <div class="hero-card">
-          <div class="mini-stat-row">
-            <div class="mini-stat"><b>物理 620</b><span>浙江 · 模拟填报</span></div>
-            <div class="mini-stat"><b>稳</b><span>录取概率 82%</span></div>
-            <div class="mini-stat"><b>3 档</b><span>冲稳保策略</span></div>
-          </div>
-          <div id="heroMiniMap" class="hero-mini-map"></div>
-        </div>
-        <div class="float-chip fc1">📈 推荐计算机类 · 就业率 96%</div>
-        <div class="float-chip fc2">🎯 城市优先 · 杭州就业机会密度 +38%</div>
+      <div class="card" style="padding:16px 18px;">
+        <div style="font-size:12.6px;font-weight:800;color:var(--ink-3);margin-bottom:8px;">2026 年各省报考人数（示意）</div>
+        <div id="heroMiniMap" class="hero-mini-map"></div>
+        <div class="muted small" style="margin-top:6px;">颜色越深表示报考人数越多。</div>
+        <a class="btn btn-ghost btn-sm mt-10" href="map.html" style="margin-top:10px;">查看全国地图 →</a>
       </div>
     </div>
   </div>
@@ -122,41 +159,66 @@
   </div>
 </section>
 
+<!-- ===== 留言板入口 ===== -->
+<section class="section" style="padding:0 0 6px;">
+  <div class="container">
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; background:linear-gradient(120deg,#f2f6ff,#ffffff);">
+      <div>
+        <h3 style="margin-bottom:6px;">💬 留言板 · 分类问答</h3>
+        <p class="muted" style="font-size:14px;">按「就业与行业 / 专业选择 / 行情分析」三类提问，先看看别人问过什么、我们怎么答的。</p>
+      </div>
+      <a class="btn btn-ghost" href="board.html">进入留言板 →</a>
+    </div>
+  </div>
+</section>
+
 <!-- ===== 使用权限说明 ===== -->
 <section class="section alt" id="access">
   <div class="container">
     <div class="section-head">
       <div class="tag">ACCESS</div>
-      <h2>现在能免费用什么，以后可能要什么</h2>
-      <p>先把话说清楚：本阶段所有功能都不收费</p>
+      <h2>查询类功能永久免费，账号只是「可选增强」</h2>
+      <p>不注册也能用；注册只是让你能保存方案、参与问答</p>
     </div>
-    <div class="grid g2">
+    <div class="grid g3">
       <div class="card">
-        <h3 style="display:flex;align-items:center;gap:8px;">✅ 目前全部免费开放</h3>
+        <h3 style="display:flex;align-items:center;gap:8px;">✅ 不注册也能用</h3>
         <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
-          专业百科、全国地图、近三年投档线、AI 模拟填报、可视化报告 ——
-          全部功能现在都可直接使用，<b>不需要注册，不限制次数，也没有付费墙</b>。
+          专业百科、全国高校名单、全国地图与近三年投档线 ——
+          <b>全部免费、不限次数、不设付费墙</b>。模拟填报也开放每日 2 次免费体验。
         </p>
         <div class="mt-16 flex wrap gap-10">
           <span class="chip green">免注册</span>
-          <span class="chip green">不限次</span>
+          <span class="chip green">查询不限次</span>
           <span class="chip green">无付费墙</span>
         </div>
       </div>
       <div class="card">
-        <h3 style="display:flex;align-items:center;gap:8px;">🔜 后续可能增加的区分</h3>
+        <h3 style="display:flex;align-items:center;gap:8px;">👤 注册后多什么</h3>
         <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
-          如果平台继续发展，初步设想是：<b>游客</b>可使用搜索、专业百科与地图等查询类功能；
-          <b>注册用户</b>可保存方案、查看历史记录、参与提问答疑；
-          需要针对自家情况做深度诊断的，再考虑提供一对一付费咨询。
+          可把志愿方案<b>保存到账号</b>、在留言板按分类<b>发布提问</b>、回看历史记录。
+          仍然全部免费。
         </p>
         <div class="mt-16 flex wrap gap-10">
-          <span class="chip">游客：查询类功能</span>
-          <span class="chip">注册：保存与答疑</span>
-          <span class="chip gold">付费：一对一定制</span>
+          <span class="chip">每日 10 次模拟填报</span>
+          <span class="chip">最多保存 20 份方案</span>
+          <span class="chip">可发帖提问</span>
         </div>
-        <div class="demo-note mt-16">以上仅为产品规划设想，尚未实施，当前仍全部免费。</div>
       </div>
+      <div class="card">
+        <h3 style="display:flex;align-items:center;gap:8px;">🎫 会员（演示中）</h3>
+        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
+          模拟填报不限次数、方案不限份数、提问优先展示。
+          <b>当前为演示模式，可直接一键切换体验，不收取任何费用。</b>
+        </p>
+        <div class="mt-16">
+          <a class="btn btn-ghost btn-sm" href="account.html">去账号中心体验 →</a>
+        </div>
+      </div>
+    </div>
+    <div class="demo-note mt-16" style="margin-top:16px;">
+      账号与留言板目前是「前端体验版」：数据只保存在你本机浏览器，不上传任何服务器，也不采集个人信息。
+      <a href="legal.html">隐私与版权说明 →</a>
     </div>
   </div>
 </section>
@@ -195,6 +257,7 @@
 <script src="assets/vendor/echarts.min.js"></script>
 <script src="assets/json/china.js"></script>
 <script src="assets/js/kb.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/theme.js"></script>
 <script src="assets/js/assistant.js"></script>
 <script>
@@ -285,6 +348,15 @@ buildShell("home");
 
   document.getElementById("hsBtn").addEventListener("click", run);
   input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); run(); } });
+
+  /* 快捷标签：点一下直接出结果，省去打字 */
+  document.querySelectorAll("#quickTags button").forEach(b => {
+    b.addEventListener("click", () => {
+      input.value = b.dataset.q;
+      box.classList.add("has-val");
+      run();
+    });
+  });
 })();
 
 /* 首页迷你地图（ECharts 全国填充） */

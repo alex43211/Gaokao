@@ -23,6 +23,7 @@
 <!-- share-meta:end -->
 <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
 <div id="siteHeader"></div>
@@ -55,6 +56,7 @@
 <script src="assets/vendor/echarts.min.js"></script>
 <script src="assets/json/china.js"></script>
 <script src="assets/js/kb.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/theme.js"></script>
 <script src="assets/js/assistant.js"></script>
 <script>
@@ -421,16 +423,50 @@ function renderDone(body) {
       </div>`;
   }
 
+  /* 额度提示 + 保存到账号（放在操作按钮之前，顺序：档案 → 方案 → 额度 → 按钮） */
+  const q = Auth.quota("plan");
+  const canGo = q.unlimited || q.remain > 0;
+  const side = document.createElement("div");
+  side.className = "mt-16";
+  side.innerHTML = `
+    <div class="notice ${canGo ? "info" : "danger"}">
+      <span class="nt-ico">${canGo ? "🎯" : "⛔"}</span>
+      <div>
+        今日模拟填报额度：<b>${q.unlimited ? "不限次数" : q.remain + " / " + q.limit + " 次剩余"}</b>
+        （${esc(q.roleLabel)}${Auth.me() ? " · " + esc(Auth.me().name) : " · 未登录"}）。
+        ${canGo ? "打开可视化报告会消耗 1 次。" : "今天额度已用完，可升级会员，或明天 0 点后再来。"}
+        <div style="margin-top:10px;" class="flex wrap gap-10">
+          <button class="btn btn-ghost btn-sm" id="savePlanBtn">💾 保存到我的账号</button>
+          <a class="btn btn-ghost btn-sm" href="account.html">账号与额度 →</a>
+        </div>
+      </div>
+    </div>`;
+  body.appendChild(side);
+
+  side.querySelector("#savePlanBtn").onclick = () => {
+    const r = Auth.savePlan({
+      title: `${form.provFull} · ${subjLabel(form)} · ${form.score} 分志愿方案`,
+      summary: `参考线 ${line} 分（${lineName()}）｜冲 ${pv.chong.length} · 稳 ${pv.wen.length} · 保 ${pv.bao.length}`,
+      payload: { form: JSON.parse(JSON.stringify(form)), ts: Date.now() }
+    });
+    toast(r.msg);
+    if (!r.ok && r.guest) { setTimeout(() => { location.href = "account.html?next=plan.html"; }, 900); }
+  };
+
   /* 按钮放在内容之后 —— 用户读完方案才看到操作 */
   stepActions(body, {
     nextLabel: "📊 在新窗口打开可视化报告",
     back: true,
     onNext: () => {
+      /* 消耗一次每日额度（游客 2 次 / 注册 10 次 / 会员不限） */
+      const c = Auth.consume("plan");
+      if (!c.ok) { toast(c.msg); return; }
       // 生成推荐数据并保存（报告页读取时会展平 result 字段）
       const result = generatePlan();
       localStorage.setItem("zhitu_plan_v1", JSON.stringify({ form, result, ts: Date.now() }));
       const w = window.open("report.html?from=1", "_blank");
       if (!w) toast("浏览器拦截了新窗口，请允许弹窗后重试");
+      else toast(c.info.unlimited ? "已打开报告（会员不限次数）" : "已打开报告，今日剩余 " + c.info.remain + " 次");
     }
   });
 

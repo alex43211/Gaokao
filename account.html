@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的账号 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="我的账号 · 保存志愿方案与每日额度 | 恩卓智选">
+<meta property="og:description" content="登录后可保存志愿方案、发布留言提问，并查看今天的剩余额度。纯前端体验版，数据只保存在本机浏览器。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/account.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="我的账号 · 恩卓智选">
+<meta name="twitter:description" content="登录后可保存志愿方案、发布留言提问，并查看今天的剩余额度。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/account.html">
+<!-- share-meta:end -->
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body data-need-auth="1">
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb">首页 / 我的账号</div>
+    <h1>👤 我的账号</h1>
+    <p>登录后可以保存志愿方案、在留言板提问，并查看今天的剩余额度。本页是<b>纯前端体验版</b>：账号数据只保存在你当前这台设备的浏览器里。</p>
+  </div>
+</section>
+
+<section class="container" style="padding:28px 0 80px;">
+  <div class="notice warn mb-20" id="demoNotice"></div>
+  <div class="acc-grid">
+    <div id="accMain"></div>
+    <div id="accSide"></div>
+  </div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("account");
+
+document.getElementById("demoNotice").innerHTML =
+  '<span class="nt-ico">⚠️</span><div><b>体验版说明：</b>' + esc(Auth.DEMO_NOTICE) +
+  '<br>注册时系统只保存「随机盐 + 不可逆摘要」，不会保存明文密码；但因为<b>没有服务器做校验</b>，安全性远低于真实账号系统。</div>' +
+  (Auth.available ? "" : '<br><b>检测到浏览器禁用了本地存储，本次数据只保留在当前标签页。</b>');
+
+/* ================= 渲染 ================= */
+function renderAll() {
+  renderMain();
+  renderSide();
+}
+
+/* ---------- 主区：未登录 → 登录/注册；已登录 → 个人中心 ---------- */
+let tab = "login";
+function renderMain() {
+  const box = document.getElementById("accMain");
+  const u = Auth.me();
+  if (!u) return renderAuth(box);
+  return renderProfile(box, u);
+}
+
+function renderAuth(box) {
+  box.innerHTML = `
+    <div class="acc-card">
+      <div class="tabs">
+        <button type="button" id="tabLogin" class="${tab === "login" ? "on" : ""}">登录</button>
+        <button type="button" id="tabReg" class="${tab === "register" ? "on" : ""}">注册新账号</button>
+      </div>
+      <div id="authForm"></div>
+    </div>`;
+  box.querySelector("#tabLogin").onclick = () => { tab = "login"; renderMain(); };
+  box.querySelector("#tabReg").onclick = () => { tab = "register"; renderMain(); };
+  (tab === "login" ? renderLoginForm : renderRegForm)(box.querySelector("#authForm"));
+}
+
+function field(id, label, type, ph, extra) {
+  return `
+    <div class="field" id="f_${id}">
+      <label for="${id}">${label}</label>
+      <input id="${id}" type="${type}" autocomplete="off" placeholder="${ph}">
+      <div class="ferr" id="e_${id}"></div>
+      ${extra || ""}
+    </div>`;
+}
+function showErr(id, msg) {
+  const f = document.getElementById("f_" + id), e = document.getElementById("e_" + id);
+  if (!f) return;
+  f.classList.add("show-err");
+  if (msg) e.textContent = msg;
+}
+function clearErrs() {
+  document.querySelectorAll(".field").forEach(f => f.classList.remove("show-err"));
+}
+
+function renderLoginForm(wrap) {
+  wrap.innerHTML = `
+    <h3>欢迎回来</h3>
+    <p class="sub" style="color:var(--ink-2);font-size:13.6px;margin:6px 0 18px;">登录后可保存方案、发布留言提问。</p>
+    ${field("email", "邮箱", "email", "you@example.com")}
+    ${field("pwd", "密码", "password", "至少 6 位")}
+    <div class="acc-actions">
+      <button class="btn btn-brand" id="doLogin" style="flex:1;">登录</button>
+    </div>
+    <div class="acc-actions">
+      <button class="btn btn-ghost btn-sm" id="demoUser">⚡ 一键体验（注册用户）</button>
+      <button class="btn btn-ghost btn-sm" id="demoMember">⚡ 一键体验（会员）</button>
+    </div>`;
+
+  const run = async () => {
+    clearErrs();
+    const email = wrap.querySelector("#email").value;
+    const pwd = wrap.querySelector("#pwd").value;
+    if (!Auth.validEmail(email)) return showErr("email", "请填写有效的邮箱地址");
+    if (!pwd) return showErr("pwd", "请输入密码");
+    const btn = wrap.querySelector("#doLogin");
+    btn.disabled = true; btn.textContent = "正在校验…";
+    const r = await Auth.login({ email, pwd });
+    btn.disabled = false; btn.textContent = "登录";
+    if (!r.ok) { toast(r.msg); showErr(r.msg.includes("密码") ? "pwd" : "email", r.msg); return; }
+    afterLogin(r.msg);
+  };
+  wrap.querySelector("#doLogin").onclick = run;
+  wrap.querySelector("#pwd").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+  wrap.querySelector("#demoUser").onclick = () => { Auth.demoLogin("user"); afterLogin("已进入体验账号（注册用户）"); };
+  wrap.querySelector("#demoMember").onclick = () => { Auth.demoLogin("member"); afterLogin("已进入体验账号（会员）"); };
+}
+
+function renderRegForm(wrap) {
+  wrap.innerHTML = `
+    <h3>创建账号</h3>
+    <p class="sub" style="color:var(--ink-2);font-size:13.6px;margin:6px 0 18px;">不需要手机号，邮箱 + 密码即可。再次提醒：<b>请勿使用你常用的真实密码</b>。</p>
+    ${field("name", "昵称（2–16 字）", "text", "例如：小艾的妈妈")}
+    ${field("remail", "邮箱", "email", "you@example.com")}
+    ${field("rpwd", "设置密码（≥6 位）", "password", "建议字母 + 数字",
+      '<div class="pwd-meter" id="pm"><i></i></div>')}
+    ${field("rpwd2", "确认密码", "password", "再输入一次")}
+    <div class="acc-actions">
+      <button class="btn btn-brand" id="doReg" style="flex:1;">注册并登录</button>
+    </div>`;
+
+  const pm = wrap.querySelector("#pm");
+  wrap.querySelector("#rpwd").addEventListener("input", e => {
+    const v = e.target.value;
+    let s = 0;
+    if (v.length >= 6) s++;
+    if (v.length >= 10) s++;
+    if (/[a-zA-Z]/.test(v) && /\d/.test(v)) s++;
+    if (/[^a-zA-Z0-9]/.test(v)) s++;
+    pm.className = "pwd-meter s" + Math.min(4, s);
+  });
+
+  wrap.querySelector("#doReg").onclick = async () => {
+    clearErrs();
+    const name = wrap.querySelector("#name").value.trim();
+    const email = wrap.querySelector("#remail").value;
+    const pwd = wrap.querySelector("#rpwd").value;
+    const pwd2 = wrap.querySelector("#rpwd2").value;
+    if (name.length < 2) return showErr("name", "昵称至少 2 个字");
+    if (!Auth.validEmail(email)) return showErr("remail", "请填写有效的邮箱地址");
+    if (pwd.length < 6) return showErr("rpwd", "密码至少 6 位");
+    if (pwd !== pwd2) return showErr("rpwd2", "两次输入的密码不一致");
+
+    const btn = wrap.querySelector("#doReg");
+    btn.disabled = true; btn.textContent = "正在加密并保存…";
+    const r = await Auth.register({ name, email, pwd, pwd2 });
+    btn.disabled = false; btn.textContent = "注册并登录";
+    if (!r.ok) { toast(r.msg); return; }
+    afterLogin(r.msg);
+  };
+}
+
+function afterLogin(msg) {
+  toast(msg);
+  /* 支持 ?next=xxx.html 登录后跳回原页面 */
+  const next = qs("next", "");
+  if (next && /^[\w.-]+\.html/.test(next)) { location.href = next; return; }
+  renderAll();
+}
+
+/* ---------- 主区：个人中心 ---------- */
+function renderProfile(box, u) {
+  const r = Auth.role();
+  const plans = Auth.plans();
+  const max = r.maxPlans;
+  box.innerHTML = `
+    <div class="acc-card mb-20" style="margin-bottom:20px;">
+      <div class="flex between items-center wrap gap-10">
+        <div class="flex items-center gap-12">
+          <span class="ub-avatar" style="width:52px;height:52px;font-size:22px;${u.role === "member" ? "background:linear-gradient(135deg,#f5b301,#ff8a3d)" : ""}">${esc(u.name.slice(0, 1))}</span>
+          <div>
+            <h2 style="margin:0;">${esc(u.name)}</h2>
+            <div class="muted small mt-4">${esc(u.email)} · 注册于 ${new Date(u.ts).toLocaleDateString("zh-CN")}</div>
+          </div>
+        </div>
+        <span class="chip ${r.color === "gold" ? "gold" : "green"}" style="font-size:13px;padding:5px 14px;">${esc(r.label)}</span>
+      </div>
+      <div class="acc-actions">
+        <a class="btn btn-brand btn-sm" href="plan.html">🧮 去生成志愿方案</a>
+        <a class="btn btn-ghost btn-sm" href="board.html">💬 去留言板提问</a>
+        ${u.role === "member"
+          ? `<button class="btn btn-ghost btn-sm" id="roleBack">切回注册用户（演示）</button>`
+          : `<button class="btn btn-accent btn-sm" id="roleUp">升级为会员（演示，不收费）</button>`}
+        <button class="btn btn-ghost btn-sm" id="doLogout">退出登录</button>
+      </div>
+    </div>
+
+    <div class="acc-card">
+      <div class="flex between items-center wrap gap-10">
+        <h3 style="margin:0;">📁 我保存的方案</h3>
+        <span class="muted small">${plans.length}${isFinite(max) ? " / " + max : ""} 份</span>
+      </div>
+      <div class="mt-16" id="planList"></div>
+    </div>`;
+
+  const list = box.querySelector("#planList");
+  if (!plans.length) {
+    list.innerHTML = `<div class="empty-box">还没有保存的方案。<br>
+      在「AI 志愿模拟填报」最后一步点击「保存到我的账号」即可入库。</div>`;
+  } else {
+    list.innerHTML = plans.map(p => `
+      <div class="plan-item">
+        <div>
+          <div class="pi-t">${esc(p.title)}</div>
+          <div class="pi-m">${esc(p.summary || "")} · ${new Date(p.ts).toLocaleString("zh-CN")}</div>
+        </div>
+        <button class="pi-del" data-id="${p.id}">删除</button>
+      </div>`).join("");
+    list.querySelectorAll(".pi-del").forEach(b => {
+      b.onclick = () => {
+        const r2 = Auth.removePlan(b.dataset.id);
+        toast(r2.msg);
+        renderAll();
+      };
+    });
+  }
+
+  const up = box.querySelector("#roleUp");
+  if (up) up.onclick = () => { toast(Auth.upgrade().msg); renderAll(); };
+  const bk = box.querySelector("#roleBack");
+  if (bk) bk.onclick = () => { toast(Auth.downgrade().msg); renderAll(); };
+  box.querySelector("#doLogout").onclick = () => {
+    Auth.logout();
+    toast("已退出登录");
+    tab = "login";          /* 退出后回到登录页签，而不是停在个人中心 */
+    renderAll();
+  };
+}
+
+/* ---------- 侧栏：额度 + 权限对照 + 隐私 ---------- */
+function renderSide() {
+  const q = Auth.quota("plan");
+  const pct = q.unlimited ? 100 : (q.limit ? Math.min(100, Math.round(q.used / q.limit * 100)) : 0);
+  const cls = q.unlimited ? "" : (q.remain <= 0 ? "full" : (pct >= 60 ? "warn" : ""));
+  const u = Auth.me();
+
+  document.getElementById("accSide").innerHTML = `
+    <div class="quota mb-20">
+      <div class="quota-h">
+        <b>🎯 今日模拟填报额度</b>
+        <span class="qv">${u ? esc(u.name) : "游客"} · ${esc(q.roleLabel)}</span>
+      </div>
+      <div class="quota-bar"><div class="quota-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="quota-note">
+        ${q.unlimited
+          ? "会员不限次数 —— 今天已生成 " + q.used + " 次。"
+          : "今天已用 " + q.used + " 次，剩余 <b>" + q.remain + "</b> / " + q.limit + " 次（每日 0 点重置）。"}
+      </div>
+    </div>
+
+    <div class="acc-card mb-20" style="margin-bottom:20px;">
+      <h3>权限对照（体验版）</h3>
+      <div class="role-cards mt-10">
+        ${roleCard("guest", "游客", ["每日 2 次模拟填报", "最多保留 1 份方案", "留言板只读"], Auth.roleKey() === "guest")}
+        ${roleCard("user", "注册用户", ["每日 10 次模拟填报", "最多保留 20 份方案", "可发布留言提问"], Auth.roleKey() === "user")}
+        ${roleCard("member", "会员", ["模拟填报不限次数", "方案保存不限份数", "留言提问优先展示"], Auth.roleKey() === "member")}
+      </div>
+      <div class="demo-note mt-14">以上额度为产品化设想，采用「前端模拟」方式让你提前体验；<b>当前所有查询类功能仍然完全免费、无需注册</b>。</div>
+    </div>
+
+    <div class="acc-card">
+      <h3>🔐 隐私与本机数据</h3>
+      <ul style="padding-left:18px;margin:10px 0 14px;">
+        <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">账号、方案、留言全部保存在本机 <code>localStorage</code>，不会上传到任何服务器。</li>
+        <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">密码只保存不可逆摘要，但无服务端校验，请勿使用常用真实密码。</li>
+        <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">清除浏览器数据、换设备或使用无痕模式都会导致数据丢失。</li>
+      </ul>
+      <button class="btn btn-ghost btn-sm" id="wipe">清空本机全部演示数据</button>
+    </div>`;
+
+  document.getElementById("wipe").onclick = () => {
+    if (!confirm("确定清空本机保存的账号、方案与留言吗？此操作不可恢复。")) return;
+    Auth.resetAll();
+    toast("已清空本机演示数据");
+    renderAll();
+    if (window.__renderUserBox) window.__renderUserBox();
+  };
+}
+function roleCard(key, label, items, on) {
+  return `
+    <div class="role-card ${key === "member" ? "is-member" : ""} ${on ? "on" : ""}">
+      <div class="rc-h"><b>${label}</b>${on ? '<span class="chip green">当前</span>' : ""}</div>
+      <ul>${items.map(t => `<li>${t}</li>`).join("")}</ul>
+    </div>`;
+}
+
+/* 账号状态变化时同步刷新顶栏 */
+document.addEventListener("auth:change", () => { if (window.__renderUserBox) window.__renderUserBox(); });
+
+renderAll();
+</script>
+</body>
+</html>

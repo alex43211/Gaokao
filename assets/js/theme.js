@@ -14,6 +14,14 @@
     { id: "majors",  label: "专业百科",    href: "majors.html" },
     { id: "college", label: "高校查询",    href: "colleges.html" },
     { id: "plan",    label: "AI 志愿填报", href: "plan.html" },
+    { id: "board",   label: "留言板",      href: "board.html" },
+  ];
+  // 不进主导航、但需要入口的页面（页脚 + 手机端菜单）
+  const MORE = [
+    { id: "account", label: "我的账号",         href: "account.html" },
+    { id: "board",   label: "留言板 · 分类问答", href: "board.html" },
+    { id: "about",   label: "关于我们 · 路线图", href: "about.html" },
+    { id: "legal",   label: "版权与免责声明",   href: "legal.html" },
   ];
   const SUBS = [
     "华中科技大学 · 计算机类", "复旦大学 · 临床医学(八年制)", "北京航空航天大学 · 人工智能",
@@ -34,8 +42,8 @@
           </a>
           <nav class="nav-links">${links}</nav>
           <div class="topbar-actions">
-            <span class="badge-demo">数据演示版 v1.1</span>
-            <a href="plan.html" class="btn btn-brand btn-sm">立即模拟填报</a>
+            <div class="user-box" id="userBox"></div>
+            <a href="plan.html" class="btn btn-brand btn-sm">模拟填报</a>
             <button type="button" class="nav-toggle" id="navToggle"
                     aria-label="打开菜单" aria-expanded="false" aria-controls="mobileNav">
               <span></span><span></span><span></span>
@@ -47,8 +55,12 @@
         <div class="mobile-nav-inner">
           ${NAV.map(n => `<a href="${n.href}" class="${n.id === active ? "active" : ""}">${n.label}</a>`).join("")}
           <a href="report.html?demo=1">报告样例</a>
+          ${MORE.map(n => `<a href="${n.href}" class="${n.id === active ? "active" : ""}">${n.label}</a>`).join("")}
         </div>
       </div>`;
+
+    /* 顶栏账号区（登录态由 auth.js 提供；未接入时静默跳过） */
+    if (window.__renderUserBox) window.__renderUserBox();
 
     /* 汉堡菜单开合（窄屏专用） */
     (function () {
@@ -94,6 +106,10 @@
             <div>
               <h4>关于本站</h4>
               <a href="index.html#access">使用权限说明</a>
+              <a href="account.html">我的账号 · 每日额度</a>
+              <a href="board.html">留言板 · 分类问答</a>
+              <a href="about.html">关于我们 · 发展路线图</a>
+              <a href="legal.html">版权声明与免责</a>
               <a href="report.html?demo=1">可视化报告样例</a>
               <span style="font-size:12px;color:#6c7aa6">智能助手 · 小艾<br>7×24 在线答疑</span>
             </div>
@@ -158,7 +174,7 @@
           </div>
 
           <div class="foot-note">
-            恩卓智选 ENZO CURATED · 高考志愿智能规划平台 · v1.1（演示原型）<br>
+            恩卓智选 ENZO CURATED · 高考志愿智能规划平台 · v1.2（演示原型）<br>
             本站所示分数线 / 招生计划 / 就业数据均为<b>模拟演示数据</b>，仅用于产品功能展示，不代表任何官方口径，请以各省教育考试院与高校招生章程为准。
           </div>
         </div>
@@ -230,6 +246,32 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   };
   window.rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+  /* ---------- 顶栏账号区 ---------- */
+  window.__renderUserBox = function () {
+    const box = document.getElementById("userBox");
+    if (!box || !window.Auth) return;
+    const u = Auth.me();
+    if (!u) {
+      box.innerHTML = `<a class="ub-guest" href="account.html">👤 登录 / 注册</a>`;
+      return;
+    }
+    const roleLabel = (Auth.ROLES[u.role] || {}).label || "";
+    box.innerHTML = `
+      <a class="ub-user ${u.role === "member" ? "is-member" : ""}" href="account.html" title="进入个人中心">
+        <span class="ub-avatar">${window.esc((u.name || "?").slice(0, 1))}</span>
+        <span class="ub-name">${window.esc(u.name)}</span>
+        <span class="ub-role">${window.esc(roleLabel)}</span>
+      </a>
+      <button type="button" class="ub-out" id="ubOut">退出</button>`;
+    const out = document.getElementById("ubOut");
+    if (out) out.addEventListener("click", () => {
+      Auth.logout();
+      if (window.toast) window.toast("已退出登录");
+      /* 依赖登录态的页面（如个人中心）退出后需要复位视图 */
+      if (document.body.dataset.needAuth === "1") setTimeout(() => location.reload(), 400);
+    });
+  };
 
   /* 省份全称(GeoJSON) -> 数据表短名映射 */
   const FULL2SHORT = {

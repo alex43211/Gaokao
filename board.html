@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>留言板 · 分类问答 · 恩卓智选</title>
+<!-- share-meta:begin -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="恩卓智选 · 高考志愿智能规划平台">
+<meta property="og:title" content="留言板 · 就业 / 专业选择 / 行情分析 分类问答 | 恩卓智选">
+<meta property="og:description" content="按 就业与行业、专业选择、行情分析 三类提问与交流，官方示例帖先帮你把常见问题讲清楚。">
+<meta property="og:url" content="https://alex43211.github.io/Gaokao/board.html">
+<meta property="og:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta property="og:image:width" content="500">
+<meta property="og:image:height" content="400">
+<meta property="og:image:alt" content="恩卓智选 · 高考志愿智能规划平台">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="留言板 · 分类问答 · 恩卓智选">
+<meta name="twitter:description" content="按 就业与行业、专业选择、行情分析 三类提问与交流。">
+<meta name="twitter:image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<meta itemprop="image" content="https://alex43211.github.io/Gaokao/assets/share-card.png">
+<link rel="canonical" href="https://alex43211.github.io/Gaokao/board.html">
+<!-- share-meta:end -->
+<link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div id="siteHeader"></div>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="crumb">首页 / 留言板</div>
+    <h1>💬 留言板 · 分类问答</h1>
+    <p>把问题按 <b>就业与行业 / 专业选择 / 行情分析</b> 三类提出来，方便同类问题聚在一起互相参考。
+      游客可以浏览全部内容，<b>注册后即可发布</b>。</p>
+  </div>
+</section>
+
+<section class="container" style="padding:28px 0 80px;">
+  <div class="notice info mb-20">
+    <span class="nt-ico">ℹ️</span>
+    <div><b>这是本机留言板（体验版）。</b>因为没有服务器，你发布的帖子只保存在<u>你自己这台设备的浏览器</u>里，
+      其他人看不到，换个设备也看不到。它的作用是让你提前体验「分类提问 + 官方示例答复」的流程，
+      正式版会接入后端与人工答复通道（详见 <a href="about.html">发展路线图</a>）。</div>
+  </div>
+
+  <div class="board-layout">
+    <div>
+      <div id="askBox"></div>
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="flex between items-center wrap gap-10 mb-16">
+        <span class="muted small" id="listSummary"></span>
+        <div class="cat-tabs" style="margin:0;">
+          <button type="button" id="sortNew" class="on">最新</button>
+          <button type="button" id="sortHot">最热</button>
+        </div>
+      </div>
+      <div id="postList"></div>
+    </div>
+    <div>
+      <div class="acc-card mb-20">
+        <h3>📂 三个分类分别问什么</h3>
+        <div id="catHelp"></div>
+      </div>
+      <div class="acc-card">
+        <h3>✍️ 提问小建议</h3>
+        <ul style="padding-left:18px;margin:10px 0 0;">
+          <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">写清<b>省份 + 选科 + 分数段</b>，别人才好判断。</li>
+          <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">说明<b>家庭条件与目标</b>（就业 / 考研 / 考公 / 留学）。</li>
+          <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">一次问一个核心问题，别把十件事挤在一起。</li>
+          <li style="font-size:13.4px;color:var(--ink-2);line-height:1.95;">不要填写孩子的真实姓名、身份证号等隐私信息。</li>
+        </ul>
+        <div class="demo-note mt-14">涉及具体录取分数的，请以省教育考试院与高校招生章程为准。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="siteFooter"></div>
+
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/board.js"></script>
+<script src="assets/js/theme.js"></script>
+<script src="assets/js/assistant.js"></script>
+<script>
+buildShell("board");
+
+let curCat = "全部";
+let curSort = "new";
+
+/* ---------- 提问区：游客只读 ---------- */
+function renderAsk() {
+  const box = document.getElementById("askBox");
+  const can = Auth.role().canPost;
+  if (!can) {
+    box.innerHTML = `
+      <div class="notice warn mb-16">
+        <span class="nt-ico">🔒</span>
+        <div><b>游客当前只能浏览。</b>登录后即可发布提问，并能在「我的账号」里看到自己发过的内容。
+          <div style="margin-top:10px;">
+            <a class="btn btn-brand btn-sm" href="account.html?next=board.html">登录 / 注册后发帖</a>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  box.innerHTML = `
+    <div class="acc-card board-form mb-16">
+      <h3>发布提问</h3>
+      <div class="field">
+        <label>① 选择分类</label>
+        <div class="cat-pick" id="catPick"></div>
+      </div>
+      <div class="field" id="f_title">
+        <label for="pTitle">② 一句话说清你的问题（4–40 字）</label>
+        <input id="pTitle" type="text" maxlength="40" placeholder="例如：浙江 620 分物理类，想学电气该怎么选校？">
+        <div class="ferr" id="e_title"></div>
+      </div>
+      <div class="field" id="f_body">
+        <label for="pBody">③ 补充背景（10–500 字）</label>
+        <textarea id="pBody" maxlength="500" placeholder="省份、选科、分数段、家庭条件、目标（就业/考研/考公）…"></textarea>
+        <div class="counter" id="pCount">0 / 500</div>
+        <div class="ferr" id="e_body"></div>
+      </div>
+      <div class="acc-actions" style="margin-top:6px;">
+        <button class="btn btn-brand" id="doPost">发布到留言板</button>
+        <span class="muted small" style="align-self:center;">以「${esc(Auth.me().name)}」的身份发布</span>
+      </div>
+    </div>`;
+
+  const pick = box.querySelector("#catPick");
+  pick.innerHTML = Board.CATS.map(c =>
+    `<button type="button" data-cat="${c.key}" class="${c.key === pickCat ? "on" : ""}">
+       <span>${c.icon} ${c.label}</span><small>${c.desc}</small>
+     </button>`).join("");
+  pick.querySelectorAll("button").forEach(b => {
+    b.onclick = () => { pickCat = b.dataset.cat; box.querySelectorAll("#catPick button").forEach(x => x.classList.remove("on")); b.classList.add("on"); };
+  });
+
+  const body = box.querySelector("#pBody"), cnt = box.querySelector("#pCount");
+  body.addEventListener("input", () => {
+    const n = body.value.length;
+    cnt.textContent = n + " / 500";
+    cnt.className = "counter" + (n > 500 ? " over" : "");
+  });
+
+  box.querySelector("#doPost").onclick = () => {
+    box.querySelectorAll(".field").forEach(f => f.classList.remove("show-err"));
+    const title = box.querySelector("#pTitle").value.trim();
+    const txt = body.value.trim();
+    if (title.length < 4) return showFieldErr("title", "标题至少 4 个字");
+    if (title.length > 40) return showFieldErr("title", "标题最多 40 个字");
+    if (txt.length < 10) return showFieldErr("body", "内容至少 10 个字，把情况说清楚别人才好回答");
+    if (txt.length > 500) return showFieldErr("body", "内容最多 500 个字");
+
+    const r = Board.add({ cat: pickCat, title: title, body: txt });
+    if (!r.ok) { toast(r.msg); return; }
+    toast("提问已发布（仅保存在本机）");
+    box.querySelector("#pTitle").value = "";
+    body.value = ""; cnt.textContent = "0 / 500";
+    curCat = pickCat;              /* 发布后自动切到该分类，让用户立刻看到自己的帖子 */
+    renderAll();
+    window.scrollTo({ top: document.getElementById("catTabs").offsetTop - 120, behavior: "smooth" });
+  };
+}
+let pickCat = Board.CAT_KEYS[0];
+function showFieldErr(id, msg) {
+  const f = document.getElementById("f_" + id), e = document.getElementById("e_" + id);
+  if (!f) return;
+  f.classList.add("show-err");
+  if (e && msg) e.textContent = msg;
+  else if (!e) toast(msg);
+}
+
+/* ---------- 分类标签 ---------- */
+function renderTabs() {
+  const c = Board.counts();
+  const items = [{ key: "全部", label: "全部", icon: "🗂️" }].concat(Board.CATS);
+  document.getElementById("catTabs").innerHTML = items.map(it =>
+    `<button type="button" data-cat="${it.key}" class="${curCat === it.key ? "on" : ""}">
+       ${it.icon} ${it.label}<span>${c[it.key] || 0}</span></button>`).join("");
+  document.querySelectorAll("#catTabs button").forEach(b => {
+    b.onclick = () => { curCat = b.dataset.cat; renderAll(); };
+  });
+}
+
+/* ---------- 帖子列表 ---------- */
+function renderList() {
+  const list = Board.list(curCat, curSort);
+  const box = document.getElementById("postList");
+  document.getElementById("listSummary").textContent =
+    (curCat === "全部" ? "全部提问" : curCat) + " · 共 " + list.length + " 条";
+
+  if (!list.length) {
+    box.innerHTML = `<div class="empty-box">这个分类下还没有内容。<br>${Auth.role().canPost ? "上面就是发布框，来提第一个问题吧。" : "登录后可以发布第一个问题。"}</div>`;
+    return;
+  }
+  const u = Auth.me();
+  box.innerHTML = list.map(p => {
+    const liked = Board.liked(p.id);
+    const n = Board.likesOf(p.id);
+    const mine = u && p.uid === u.id;
+    const roleLabel = p.demo ? "官方示例" : ((Auth.ROLES[p.role] || {}).label || "用户");
+    return `
+      <div class="post ${p.demo ? "is-demo" : ""}">
+        <div class="post-h">
+          <div class="post-t">${esc(p.title)}</div>
+          <span class="chip ${p.cat === "就业" ? "green" : p.cat === "专业选择" ? "" : "gold"}" style="flex:0 0 auto;">${esc(p.cat)}</span>
+        </div>
+        <div class="post-meta">
+          <span>${p.demo ? "📌" : "👤"} ${esc(p.name)}</span>
+          <span class="chip gray" style="margin:0;">${esc(roleLabel)}</span>
+          <span>${timeAgo(p.ts)}</span>
+        </div>
+        <div class="post-body">${esc(p.body)}</div>
+        <div class="post-acts">
+          <button type="button" class="${liked ? "on" : ""}" data-like="${p.id}">${liked ? "❤️" : "🤍"} 有用 ${n}</button>
+          ${mine ? `<button type="button" data-del="${p.id}">删除</button>` : ""}
+          ${p.demo ? '<span class="pa-tip">官方示例帖，用于演示分类与答复形态</span>' : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  box.querySelectorAll("[data-like]").forEach(b => {
+    b.onclick = () => { Board.like(b.dataset.like); renderAll(); };
+  });
+  box.querySelectorAll("[data-del]").forEach(b => {
+    b.onclick = () => {
+      if (!confirm("确定删除这条提问吗？")) return;
+      const r = Board.remove(b.dataset.del);
+      toast(r.msg);
+      renderAll();
+    };
+  });
+}
+
+function timeAgo(ts) {
+  const d = Date.now() - (ts || 0);
+  if (d < 60e3) return "刚刚";
+  if (d < 3600e3) return Math.floor(d / 60e3) + " 分钟前";
+  if (d < 86400e3) return Math.floor(d / 3600e3) + " 小时前";
+  if (d < 7 * 86400e3) return Math.floor(d / 86400e3) + " 天前";
+  return new Date(ts).toLocaleDateString("zh-CN");
+}
+
+/* ---------- 侧栏分类说明 ---------- */
+function renderCatHelp() {
+  document.getElementById("catHelp").innerHTML = Board.CATS.map(c => `
+    <div style="padding:11px 0;border-bottom:1px dashed var(--line);">
+      <b style="font-size:14px;">${c.icon} ${c.label}</b>
+      <div class="muted small mt-4">${c.desc}</div>
+    </div>`).join("") + `
+    <div style="padding-top:12px;">
+      <b style="font-size:14px;">🤝 后续规划</b>
+      <div class="muted small mt-4">接入后端后，每条提问都可转成邮件工单，由小艾与志愿者按分类答复并公开沉淀。</div>
+    </div>`;
+}
+
+function renderAll() {
+  renderAsk();
+  renderTabs();
+  renderList();
+  renderCatHelp();
+}
+
+document.getElementById("sortNew").onclick = () => {
+  curSort = "new";
+  document.getElementById("sortNew").classList.add("on");
+  document.getElementById("sortHot").classList.remove("on");
+  renderList();
+};
+document.getElementById("sortHot").onclick = () => {
+  curSort = "hot";
+  document.getElementById("sortHot").classList.add("on");
+  document.getElementById("sortNew").classList.remove("on");
+  renderList();
+};
+
+/* 登录 / 退出后权限会变，需要重画提问区 */
+document.addEventListener("auth:change", renderAll);
+
+renderAll();
+</script>
+</body>
+</html>
