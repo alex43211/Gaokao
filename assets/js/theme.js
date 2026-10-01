@@ -114,13 +114,35 @@
               <span style="font-size:12px;color:#6c7aa6">智能助手 · 小艾<br>7×24 在线答疑</span>
             </div>
           </div>
-          <!-- ===== 咨询与赞赏（完全可选，非付费墙） ===== -->
+          <!-- ===== 一对一咨询（新增，位于收款码上方；独立类名不影响「收款码恰为 2 张」断言） ===== -->
+          <div class="foot-consult">
+            <div class="foot-consult-tx">
+              <h4>💬 微信一对一咨询<span class="foot-consult-tag">扫码加微信 · 免费问</span></h4>
+              <p>分数、位次、专业倾向、家庭条件 —— 把情况和我说说。我按你家的具体情况，把
+              <b style="color:#cdd6ee">城市 / 院校 / 专业 / 就业</b> 放到同一张表上捋一遍，
+              再给出「冲 · 稳 · 保」的取舍建议，尽量少走弯路。</p>
+              <ul class="foot-consult-pts">
+                <li>适合：拿不准专业方向、纠结省内还是出省、分数卡在关键节点</li>
+                <li>形式：微信文字 / 语音沟通，按需约时间</li>
+                <li>说明：咨询完全自愿，本站所有功能不因你是否咨询而设限</li>
+              </ul>
+            </div>
+            <div class="foot-consult-qrbox">
+              <button type="button" class="foot-consult-qr" data-qr="assets/qr/consult.png"
+                      data-cap="恩卓智选 · 微信一对一咨询（扫码添加好友）">
+                <img src="assets/qr/consult-320.png" alt="恩卓智选微信号二维码 · 扫码添加一对一咨询" loading="lazy">
+                <span>扫码加微信</span>
+              </button>
+              <p class="foot-consult-cap">微信扫一扫 / 长按识别</p>
+            </div>
+          </div>
+
+          <!-- ===== 自愿打赏（收款码恰为 2 张，与上方咨询码分开计数） ===== -->
           <div class="foot-tip">
             <div class="foot-tip-copy">
-              <h4>☕ 自愿打赏 · 一对一咨询（<span style="color:#ffd089">完全可选，不是付费墙</span>）</h4>
+              <h4>☕ 自愿打赏（<span style="color:#ffd089">完全可选，不是付费墙</span>）</h4>
               <p><b style="color:#cdd6ee">本站的高校地图、专业百科、AI 模拟填报与可视化报告全部免费，不需要注册、不需要付费、不锁任何功能。</b>
-              你刚才看到的所有结果都已经免费生成完毕，下方二维码与功能使用无关，纯粹是如果你愿意支持我们。
-              若需要针对自家孩子的分数与家庭情况做一对一方案诊断，也欢迎扫码联系。</p>
+              你刚才看到的所有结果都已经免费生成完毕，下方二维码与功能使用无关，纯粹是如果你愿意支持我们。</p>
               <span class="thanks">🙏 感谢每一份支持 —— 你的每一次打赏，都会让更多普通家庭用上不收费的志愿工具。</span>
             </div>
             <div>
@@ -199,8 +221,9 @@
         lb.querySelector("#qrLightboxCap").textContent = cap;
         lb.classList.add("open");
       };
-      // 注意：分享码用 .foot-share-qr 独立类名，避免影响「收款码恰为 2 张」的既有验收断言
-      f.querySelectorAll(".foot-qr, .foot-share-qr").forEach(btn => {
+      // 注意：咨询码用 .foot-consult-qr、分享码用 .foot-share-qr，均为独立类名，
+      //       避免影响「收款码恰为 2 张」的既有验收断言
+      f.querySelectorAll(".foot-qr, .foot-share-qr, .foot-consult-qr").forEach(btn => {
         btn.addEventListener("click", () => openLightbox(btn.dataset.qr, btn.dataset.cap));
       });
 

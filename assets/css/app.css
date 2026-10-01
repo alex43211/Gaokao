@@ -227,6 +227,41 @@
   .topbar .container { gap: 12px; }
 }
 
+/* ---------- 7.5 页脚 · 微信一对一咨询（位于收款码上方） ---------- */
+.foot-consult {
+  border-top: 1px solid rgba(255,255,255,.1);
+  margin-top: 32px; padding-top: 28px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px 44px; align-items: center;
+}
+.foot-consult h4 {
+  color: #fff; font-size: 15px; margin-bottom: 12px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 9px;
+}
+.foot-consult-tag {
+  font-size: 11.5px; font-weight: 800; color: #06341d;
+  background: #7ff0b4; border-radius: 999px; padding: 2px 10px;
+  letter-spacing: .2px;
+}
+.foot-consult-tx p { font-size: 13px; line-height: 1.95; color: #aab4d6; margin: 0; }
+.foot-consult-pts { margin: 11px 0 0; padding-left: 19px; }
+.foot-consult-pts li { font-size: 12.5px; line-height: 1.9; color: #93a0c6; }
+.foot-consult-pts li::marker { color: #7ff0b4; }
+.foot-consult-qrbox { text-align: center; }
+.foot-consult-qr {
+  display: block; width: 158px; padding: 12px 12px 9px;
+  border: 0; border-radius: 16px; background: #fff; cursor: zoom-in;
+  font-family: inherit; box-shadow: 0 8px 22px rgba(0,0,0,.3);
+  transition: transform .22s, box-shadow .22s;
+}
+.foot-consult-qr:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,.42); }
+.foot-consult-qr img { width: 100%; display: block; border-radius: 8px; }
+.foot-consult-qr span {
+  display: block; margin-top: 8px; font-size: 12.5px; font-weight: 900;
+  text-align: center; color: #398bd0; letter-spacing: .3px;
+}
+.foot-consult-cap { margin: 8px 0 0; font-size: 11.5px; color: #6c7aa6; text-align: center; }
+
 /* ---------- 8. 响应式 ---------- */
 @media (max-width: 1020px) {
   .acc-grid { grid-template-columns: minmax(0, 1fr); }
@@ -262,4 +297,7 @@
   .post { padding: 15px 15px; }
   .post-h { flex-direction: column; gap: 6px; }
   .doc table { display: block; overflow-x: auto; }
+  .foot-consult { grid-template-columns: minmax(0, 1fr); }
+  .foot-consult-qrbox { display: flex; flex-direction: column; align-items: center; }
+  .foot-consult-qr { width: 168px; }
 }
