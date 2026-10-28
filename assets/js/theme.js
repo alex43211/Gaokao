@@ -59,16 +59,16 @@
   window.APP.SITE_URL = "https://alex43211.github.io/Gaokao/";
   const SITE_URL = window.APP.SITE_URL;
   const NAV = [
-    { id: "home",    label: "首页",        href: "index.html" },
-    { id: "map",     label: "全国地图",    href: "map.html" },
-    { id: "majors",  label: "专业百科",    href: "majors.html" },
-    { id: "college", label: "高校查询",    href: "colleges.html" },
-    { id: "plan",    label: "AI 志愿填报", href: "plan.html" },
-    { id: "board",   label: "留言板",      href: "board.html" },
+    { id: "home",     label: "首页",        href: "index.html" },
+    { id: "map",      label: "全国地图",    href: "map.html" },
+    { id: "majors",   label: "专业百科",    href: "majors.html" },
+    { id: "college",  label: "高校查询",    href: "colleges.html" },
+    { id: "plan",     label: "AI 志愿填报", href: "plan.html" },
+    { id: "board",    label: "留言板",      href: "board.html" },
+    { id: "overview", label: "数据总览",    href: "overview.html" },
   ];
   // 不进主导航、但需要入口的页面（页脚 + 手机端菜单）
   const MORE = [
-    { id: "overview", label: "数据总览 · 功能详解", href: "overview.html" },
     { id: "account", label: "我的账号",         href: "account.html" },
     { id: "board",   label: "留言板 · 分类问答", href: "board.html" },
     { id: "about",   label: "关于我们 · 路线图", href: "about.html" },

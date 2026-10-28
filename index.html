@@ -51,42 +51,8 @@
 
     <div class="hm-tags" id="quickTags">
       <span class="hm-tags-lb">大家都在搜</span>
-      <button type="button" data-q="精神医学">精神医学</button>
-      <button type="button" data-q="计算机">计算机</button>
-      <button type="button" data-q="临床医学">临床医学</button>
-      <button type="button" data-q="电气工程">电气工程</button>
-      <button type="button" data-q="清华大学">清华大学</button>
-      <button type="button" data-q="浙江">浙江</button>
     </div>
   </section>
-
-  <!-- ===== 模块入口：全部功能在首屏可达 ===== -->
-  <nav class="hm-grid" aria-label="功能入口">
-    <a class="hm-card" href="map.html">
-      <span class="hm-card-ico" aria-hidden="true">🗺️</span>
-      <span class="hm-card-tx"><b>全国地图</b><small>34 省 · 近 3 年投档线</small></span>
-    </a>
-    <a class="hm-card" href="majors.html">
-      <span class="hm-card-ico" aria-hidden="true">📚</span>
-      <span class="hm-card-tx"><b>专业百科</b><small>875 个本科专业</small></span>
-    </a>
-    <a class="hm-card" href="colleges.html">
-      <span class="hm-card-ico" aria-hidden="true">🏛️</span>
-      <span class="hm-card-tx"><b>高校查询</b><small>2952 所院校</small></span>
-    </a>
-    <a class="hm-card is-primary" href="plan.html">
-      <span class="hm-card-ico" aria-hidden="true">🧮</span>
-      <span class="hm-card-tx"><b>AI 志愿填报</b><small>冲 · 稳 · 保三档方案</small></span>
-    </a>
-    <a class="hm-card" href="board.html">
-      <span class="hm-card-ico" aria-hidden="true">💬</span>
-      <span class="hm-card-tx"><b>留言板</b><small>分类问答</small></span>
-    </a>
-    <a class="hm-card" href="overview.html">
-      <span class="hm-card-ico" aria-hidden="true">📊</span>
-      <span class="hm-card-tx"><b>数据总览</b><small>功能详解 · 使用权限</small></span>
-    </a>
-  </nav>
 </main>
 
 <!-- ===== 搜索结果浮层：覆盖显示，不撑高页面 ===== -->
@@ -226,6 +192,76 @@ buildShell("home", { compactFooter: true });
   });
 
   syncClear();
+})();
+
+/* ===== 大家都在搜：每次进入随机换一批，桌面端定时轮换 ===== */
+(function () {
+  const box = document.getElementById("quickTags");
+  const input = document.getElementById("hsInput");
+  const btn = document.getElementById("hsBtn");
+  if (!box || !input || !btn) return;
+
+  /* 词池按「专业 / 高校 / 省份」分三组；都用短词，避免标签换行把一屏顶出滚动条 */
+  const POOL = {
+    major: ["计算机", "人工智能", "临床医学", "电气工程", "软件工程", "口腔医学", "法学",
+            "金融学", "会计学", "电子信息", "自动化", "数学", "物理学", "药学", "护理学",
+            "建筑学", "新闻学", "心理学", "经济学", "微电子", "大数据", "机器人工程",
+            "精神医学", "中医学", "统计学", "化学", "车辆工程", "通信工程", "生物科学", "土木工程"],
+    college: ["清华大学", "北京大学", "复旦大学", "浙江大学", "上海交通大学", "南京大学",
+              "中山大学", "四川大学", "武汉大学", "同济大学", "华中科技大学", "西安交通大学"],
+    prov: ["浙江", "广东", "江苏", "山东", "河南", "四川", "北京", "上海", "湖北", "湖南"],
+  };
+
+  function pick(arr, n) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, n);
+  }
+
+  /* 3 专业 + 2 高校 + 1 省份，再打散顺序：每次组合都不同，但不至于全是一类 */
+  function compose() {
+    return [...pick(POOL.major, 3), ...pick(POOL.college, 2), ...pick(POOL.prov, 1)]
+      .sort(() => Math.random() - 0.5);
+  }
+
+  let last = "";
+  function render(list, animate) {
+    const apply = () => {
+      box.querySelectorAll("button").forEach(b => b.remove());
+      list.forEach(q => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.dataset.q = q;
+        b.textContent = q;
+        b.addEventListener("click", () => { input.value = q; btn.click(); });
+        box.appendChild(b);
+      });
+      box.classList.remove("is-fading");
+    };
+    if (!animate) { apply(); return; }
+    box.classList.add("is-fading");
+    setTimeout(apply, 170);
+  }
+
+  function refresh(animate) {
+    /* 重掷几次，避免连着两次出现同一组 */
+    let list = compose();
+    for (let i = 0; i < 6 && list.join("|") === last; i++) list = compose();
+    last = list.join("|");
+    render(list, animate);
+  }
+
+  refresh(false);
+
+  /* 只在「够宽 + 够高」的桌面端自动轮换；手机/矮屏只保证每次进入不同 */
+  const canRotate = window.matchMedia("(min-width: 900px) and (min-height: 700px)").matches
+    && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (canRotate) {
+    setInterval(() => { if (!document.hidden) refresh(true); }, 9000);
+  }
 })();
 </script>
 </body>
