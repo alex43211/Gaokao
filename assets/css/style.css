@@ -1004,6 +1004,21 @@ body.hm-lock { overflow: hidden; }
 .foot-min a:hover { color: var(--brand); }
 .foot-min-note { opacity: .75; }
 
+/* 首页页脚里的访问统计：沿用 .foot-stats 结构，换成浅底紧凑版 */
+.foot-min .foot-stats {
+  margin-top: 0; padding: 0 22px 9px; border-top: none;
+  gap: 4px 14px; font-size: 12px; color: var(--ink-3);
+}
+.foot-min .fs-badge {
+  font-size: 11px; font-weight: 800; padding: 2px 9px;
+  color: var(--brand); background: var(--brand-soft); border: 1px solid var(--line);
+}
+.foot-min .fs-lb { font-size: 11.5px; color: var(--ink-3); }
+.foot-min .fs-v { font-size: 13.5px; color: var(--ink); }
+.foot-min .fs-u { font-size: 11px; color: var(--ink-3); }
+.foot-min .fs-sep { height: 11px; background: var(--line); }
+.foot-min .fs-item.na .fs-v { color: var(--ink-3); }
+
 @media (max-width: 720px) {
   .hm-wrap { gap: 14px; padding: 16px 16px 14px; }
   .hm-stage { gap: 10px; }
@@ -1014,6 +1029,9 @@ body.hm-lock { overflow: hidden; }
   /* 窄屏页脚只留一行，避免换行把首屏顶出滚动条 */
   .foot-min .container { font-size: 11.5px; gap: 3px 10px; padding: 7px 14px; min-height: 34px; }
   .foot-min-note { display: none; }
+  .foot-min .foot-stats { padding: 0 12px 7px; gap: 3px 10px; }
+  .foot-min .fs-badge { display: none; }
+  .foot-min .fs-v { font-size: 12.5px; }
   .hm-overlay { padding: 4vh 12px; }
   .hm-overlay-panel { max-height: 88vh; }
 }

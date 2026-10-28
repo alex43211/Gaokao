@@ -145,9 +145,9 @@
       window.addEventListener("resize", () => { if (window.innerWidth > 1020) setOpen(false); });
     })();
     const f = document.getElementById("siteFooter");
-    /* 首页是「一屏不滚动」布局，放不下完整页脚（咨询码/打赏码/分享/统计），
-       因此走精简版：一行版权 + 三个文字入口。
-       统计节点保留但视觉隐藏 —— 这样首页仍然计入访问量，只是不占高度。 */
+    /* 首页是「一屏不滚动」布局，放不下完整页脚（咨询码/打赏码/分享），
+       因此走精简版：一行版权入口 + 一行访问统计。
+       统计块保持 hidden，等数据到位再显示 —— 接口失败就整块不出现，不留空壳。 */
     if (f && compactFooter) f.innerHTML = `
       <footer class="foot-min">
         <div class="container">
@@ -157,8 +157,13 @@
           <a href="legal.html">隐私与免责</a>
           <span class="foot-min-note">分数线 / 招生计划均为演示数据</span>
         </div>
-        <div id="footStats" hidden style="display:none">
-          <span id="fsSitePv"></span><span id="fsSiteUv"></span><span id="fsPagePv"></span>
+        <div class="foot-stats" id="footStats" hidden>
+          <span class="fs-badge">📊 访问统计</span>
+          <span class="fs-item"><span class="fs-lb">总访问量</span><b class="fs-v" id="fsSitePv">—</b><span class="fs-u">次</span></span>
+          <span class="fs-sep"></span>
+          <span class="fs-item"><span class="fs-lb">访客数</span><b class="fs-v" id="fsSiteUv">—</b><span class="fs-u">人</span></span>
+          <span class="fs-sep"></span>
+          <span class="fs-item"><span class="fs-lb">本页浏览</span><b class="fs-v" id="fsPagePv">—</b><span class="fs-u">次</span></span>
         </div>
       </footer>`;
     else if (f) f.innerHTML = `
