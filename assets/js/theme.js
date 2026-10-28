@@ -68,6 +68,7 @@
   ];
   // 不进主导航、但需要入口的页面（页脚 + 手机端菜单）
   const MORE = [
+    { id: "overview", label: "数据总览 · 功能详解", href: "overview.html" },
     { id: "account", label: "我的账号",         href: "account.html" },
     { id: "board",   label: "留言板 · 分类问答", href: "board.html" },
     { id: "about",   label: "关于我们 · 路线图", href: "about.html" },
@@ -78,7 +79,9 @@
     "哈尔滨工业大学 · 机器人工程", "四川大学 · 口腔医学", "西安电子科技大学 · 电子信息",
   ];
 
-  window.buildShell = function (active) {
+  window.buildShell = function (active, opts) {
+    opts = opts || {};
+    const compactFooter = !!opts.compactFooter;   // 首页一屏布局用精简页脚
     const links = NAV.map(n =>
       `<a href="${n.href}" class="${n.id === active ? "active" : ""}">${n.label}</a>`
     ).join("");
@@ -142,7 +145,23 @@
       window.addEventListener("resize", () => { if (window.innerWidth > 1020) setOpen(false); });
     })();
     const f = document.getElementById("siteFooter");
-    if (f) f.innerHTML = `
+    /* 首页是「一屏不滚动」布局，放不下完整页脚（咨询码/打赏码/分享/统计），
+       因此走精简版：一行版权 + 三个文字入口。
+       统计节点保留但视觉隐藏 —— 这样首页仍然计入访问量，只是不占高度。 */
+    if (f && compactFooter) f.innerHTML = `
+      <footer class="foot-min">
+        <div class="container">
+          <span>© 恩卓智选 ENZO CURATED</span>
+          <a href="overview.html">数据总览</a>
+          <a href="about.html">关于我们</a>
+          <a href="legal.html">隐私与免责</a>
+          <span class="foot-min-note">分数线 / 招生计划均为演示数据</span>
+        </div>
+        <div id="footStats" hidden style="display:none">
+          <span id="fsSitePv"></span><span id="fsSiteUv"></span><span id="fsPagePv"></span>
+        </div>
+      </footer>`;
+    else if (f) f.innerHTML = `
       <footer class="site-footer">
         <div class="container">
           <div class="grid">
@@ -168,7 +187,7 @@
             </div>
             <div>
               <h4>关于本站</h4>
-              <a href="index.html#access">使用权限说明</a>
+              <a href="overview.html#access">使用权限说明</a>
               <a href="account.html">我的账号 · 每日额度</a>
               <a href="board.html">留言板 · 分类问答</a>
               <a href="about.html">关于我们 · 发展路线图</a>
@@ -266,7 +285,7 @@
       </footer>`;
 
     /* 收款码 / 分享二维码点击放大（点空白处 / Esc 关闭） */
-    if (f) {
+    if (f && !compactFooter) {
       const openLightbox = (src, cap) => {
         let lb = document.getElementById("qrLightbox");
         if (!lb) {

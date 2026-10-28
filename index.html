@@ -27,225 +27,81 @@
 <link rel="stylesheet" href="assets/css/app.css">
 <script>/* 首帧应用主题，避免深色模式刷新时白屏闪烁 */(function(){try{var t=localStorage.getItem("enzo_theme");if(t==="dark"){var d=document.documentElement;d.setAttribute("data-theme","dark");d.style.colorScheme="dark";}}catch(e){}})();</script>
 </head>
-<body>
+<body class="home-min">
 <div id="siteHeader"></div>
 
-<!-- ===== Hero：搜索优先 ===== -->
-<section class="hero hero--search">
-  <div class="container">
-    <div class="search-first">
-      <span class="hero-eyebrow">🧭 选择比努力更重要 · 以就业视角倒推志愿</span>
-      <h1>先搜一搜，<span class="hl">再决定报什么</span></h1>
-      <p class="hero-sub">
-        输入一个专业、一所学校，或者一个你听说的行业 ——
-        立刻看到它学什么、去哪工作、值不值得报。
-      </p>
-
-      <!-- ===== 全局搜索：专业 / 高校一个入口 ===== -->
-      <div class="home-search home-search--xl" id="homeSearch">
-        <div class="home-search-input">
-          <span class="hsi">🔍</span>
-          <input id="hsInput" type="search" enterkeyhint="search" autocomplete="off"
-                 placeholder="搜专业或高校，如：精神医学、机械、中国人民大学…">
-          <button type="button" class="hs-clear" id="hsClear" aria-label="清空">✕</button>
-        </div>
-        <button class="btn btn-brand" id="hsBtn">搜索</button>
-      </div>
-
-      <div class="quick-tags" id="quickTags">
-        <span class="qt-lb">大家都在搜</span>
-        <button type="button" data-q="精神医学">精神医学</button>
-        <button type="button" data-q="计算机">计算机</button>
-        <button type="button" data-q="临床医学">临床医学</button>
-        <button type="button" data-q="电气工程">电气工程</button>
-        <button type="button" data-q="清华大学">清华大学</button>
-        <button type="button" data-q="浙江">浙江</button>
-      </div>
-
-      <div class="hs-hint" id="hsHint">试试：精神医学 · 机械工程 · 中国人民大学 · 临床医学</div>
-      <div class="hs-results" id="hsResults"></div>
-
-      <div class="hero-cta">
-        <a class="btn btn-brand" href="plan.html">🚀 开始 AI 模拟填报</a>
-        <a class="btn btn-ghost" href="majors.html">📚 先查专业百科</a>
-      </div>
-
-      <div class="hero-trust">
-        <div class="t"><div><b id="heroMajorTotal">875</b><span>本科专业全收录<br>(2026 目录)</span></div></div>
-        <div class="t"><div><b>34</b><span>省市区数据覆盖</span></div></div>
-        <div class="t"><div><b id="heroCollegeTotal">2952</b><span>全国高校全名单<br>(教育部 2026)</span></div></div>
-        <div class="t"><div><b>7×24</b><span>小艾在线答疑</span></div></div>
-      </div>
+<main class="hm-wrap">
+  <!-- ===== 品牌 + 搜索：一屏内的视觉重心 ===== -->
+  <section class="hm-stage">
+    <div class="hm-brand">
+      <img class="hm-logo" src="assets/logo.jpg" alt="恩卓智选">
+      <h1>恩卓智选</h1>
+      <p class="hm-sub">选择比努力更重要 · 以就业视角倒推志愿</p>
     </div>
+
+    <div class="hm-search">
+      <div class="hm-input">
+        <span class="hm-ico" aria-hidden="true">🔍</span>
+        <input id="hsInput" type="search" enterkeyhint="search" autocomplete="off"
+               placeholder="搜专业、高校或省份，如：精神医学、清华大学、浙江">
+        <button type="button" class="hm-clear" id="hsClear" aria-label="清空">✕</button>
+      </div>
+      <button type="button" class="btn btn-brand hm-go" id="hsBtn">搜索</button>
+    </div>
+
+    <div class="hm-tags" id="quickTags">
+      <span class="hm-tags-lb">大家都在搜</span>
+      <button type="button" data-q="精神医学">精神医学</button>
+      <button type="button" data-q="计算机">计算机</button>
+      <button type="button" data-q="临床医学">临床医学</button>
+      <button type="button" data-q="电气工程">电气工程</button>
+      <button type="button" data-q="清华大学">清华大学</button>
+      <button type="button" data-q="浙江">浙江</button>
+    </div>
+  </section>
+
+  <!-- ===== 模块入口：全部功能在首屏可达 ===== -->
+  <nav class="hm-grid" aria-label="功能入口">
+    <a class="hm-card" href="map.html">
+      <span class="hm-card-ico" aria-hidden="true">🗺️</span>
+      <span class="hm-card-tx"><b>全国地图</b><small>34 省 · 近 3 年投档线</small></span>
+    </a>
+    <a class="hm-card" href="majors.html">
+      <span class="hm-card-ico" aria-hidden="true">📚</span>
+      <span class="hm-card-tx"><b>专业百科</b><small>875 个本科专业</small></span>
+    </a>
+    <a class="hm-card" href="colleges.html">
+      <span class="hm-card-ico" aria-hidden="true">🏛️</span>
+      <span class="hm-card-tx"><b>高校查询</b><small>2952 所院校</small></span>
+    </a>
+    <a class="hm-card is-primary" href="plan.html">
+      <span class="hm-card-ico" aria-hidden="true">🧮</span>
+      <span class="hm-card-tx"><b>AI 志愿填报</b><small>冲 · 稳 · 保三档方案</small></span>
+    </a>
+    <a class="hm-card" href="board.html">
+      <span class="hm-card-ico" aria-hidden="true">💬</span>
+      <span class="hm-card-tx"><b>留言板</b><small>分类问答</small></span>
+    </a>
+    <a class="hm-card" href="overview.html">
+      <span class="hm-card-ico" aria-hidden="true">📊</span>
+      <span class="hm-card-tx"><b>数据总览</b><small>功能详解 · 使用权限</small></span>
+    </a>
+  </nav>
+</main>
+
+<!-- ===== 搜索结果浮层：覆盖显示，不撑高页面 ===== -->
+<div class="hm-overlay" id="hsOverlay">
+  <div class="hm-overlay-panel" role="dialog" aria-modal="true" aria-label="搜索结果">
+    <div class="hm-overlay-head">
+      <div class="hm-overlay-tt">
+        <b>搜索结果</b>
+        <span class="hm-overlay-kw" id="hsKw"></span>
+      </div>
+      <button type="button" class="hm-overlay-x" id="hsClose" aria-label="关闭搜索结果">✕</button>
+    </div>
+    <div class="hm-overlay-body" id="hsResults"></div>
   </div>
-</section>
-
-<!-- ===== 数据总览（原首屏右侧视觉卡下沉到这里） ===== -->
-<section class="section" style="padding:44px 0 6px;">
-  <div class="container">
-    <div class="grid g2" style="align-items:center; gap:34px;">
-      <div>
-        <div class="section-head" style="text-align:left; max-width:none; margin-bottom:18px;">
-          <div class="tag">DATA OVERVIEW</div>
-          <h2>数据先摆出来，再谈建议</h2>
-          <p>覆盖 34 个省市区近三年各批次录取控制分数线与报考人数，以及全国高校与本科专业全名单。</p>
-        </div>
-        <div class="grid g2" style="gap:12px;">
-          <div class="card" style="padding:15px 17px;">
-            <div style="font-size:23px;font-weight:900;line-height:1.2;">2952<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 所</span></div>
-            <div class="muted small">教育部全国高等学校名单</div>
-          </div>
-          <div class="card" style="padding:15px 17px;">
-            <div style="font-size:23px;font-weight:900;line-height:1.2;">147<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 所</span></div>
-            <div class="muted small">第二轮「双一流」建设高校</div>
-          </div>
-          <div class="card" style="padding:15px 17px;">
-            <div style="font-size:23px;font-weight:900;line-height:1.2;">875<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 个</span></div>
-            <div class="muted small">本科专业（2026 目录）</div>
-          </div>
-          <div class="card" style="padding:15px 17px;">
-            <div style="font-size:23px;font-weight:900;line-height:1.2;">3<span style="font-size:12px;font-weight:700;color:var(--ink-3);"> 年</span></div>
-            <div class="muted small">2024–2026 投档线覆盖</div>
-          </div>
-        </div>
-      </div>
-      <div class="card" style="padding:16px 18px;">
-        <div style="font-size:12.6px;font-weight:800;color:var(--ink-3);margin-bottom:8px;">2026 年各省报考人数（示意）</div>
-        <div id="heroMiniMap" class="hero-mini-map"></div>
-        <div class="muted small" style="margin-top:6px;">颜色越深表示报考人数越多。</div>
-        <a class="btn btn-ghost btn-sm mt-10" href="map.html" style="margin-top:10px;">查看全国地图 →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 功能入口 ===== -->
-<section class="section">
-  <div class="container">
-    <div class="section-head">
-      <div class="tag">CORE FEATURES</div>
-      <h2>四个工具，够你把志愿想明白</h2>
-      <p>看数据 → 查专业 → 查学校 → 出方案，一步不多</p>
-    </div>
-    <div class="grid g3">
-      <a class="feat-card" href="majors.html">
-        <span class="num">01</span>
-        <div class="ico ib-green">📚</div>
-        <h3>本科专业百科</h3>
-        <p>875 个本科专业全收录（对照教育部 2026 目录）。输入专业名，直接看课程、就业、薪资、选科要求与择校点评。</p>
-        <span class="go">查专业 →</span>
-      </a>
-      <a class="feat-card" href="colleges.html">
-        <span class="num">02</span>
-        <div class="ico ib-accent">🏛️</div>
-        <h3>全国高校名单</h3>
-        <p>完整收录教育部《全国高等学校名单》2952 所院校（本科 1412 + 专科 1540）。按校名、学校标识码、省份、层次查询，点进看官方登记信息。</p>
-        <span class="go">查学校 →</span>
-      </a>
-      <a class="feat-card" href="map.html">
-        <span class="num">03</span>
-        <div class="ico ib-brand">🗺️</div>
-        <h3>全国高校地图</h3>
-        <p>点开任意省份，看 2024–2026 三年各批次投档线、报考人数，以及本地高校资源。</p>
-        <span class="go">看地图 →</span>
-      </a>
-      <a class="feat-card" href="plan.html">
-        <span class="num">04</span>
-        <div class="ico ib-brand">🧮</div>
-        <h3>AI 志愿模拟填报</h3>
-        <p>填省份、选科、分数，生成「冲稳保」三档方案，并可输出可视化报告带回家商量。</p>
-        <span class="go">模拟填报 →</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 留言板入口 ===== -->
-<section class="section" style="padding:0 0 6px;">
-  <div class="container">
-    <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; background:linear-gradient(120deg,#f2f6ff,#ffffff);">
-      <div>
-        <h3 style="margin-bottom:6px;">💬 留言板 · 分类问答</h3>
-        <p class="muted" style="font-size:14px;">按「就业与行业 / 专业选择 / 行情分析」三类提问，先看看别人问过什么、我们怎么答的。</p>
-      </div>
-      <a class="btn btn-ghost" href="board.html">进入留言板 →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 使用权限说明 ===== -->
-<section class="section alt" id="access">
-  <div class="container">
-    <div class="section-head">
-      <div class="tag">ACCESS</div>
-      <h2>查询类功能永久免费，账号只是「可选增强」</h2>
-      <p>不注册也能用；注册只是让你能保存方案、参与问答</p>
-    </div>
-    <div class="grid g3">
-      <div class="card">
-        <h3 style="display:flex;align-items:center;gap:8px;">✅ 不注册也能用</h3>
-        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
-          专业百科、全国高校名单、全国地图与近三年投档线 ——
-          <b>全部免费、不限次数、不设付费墙</b>。模拟填报也开放每日 2 次免费体验。
-        </p>
-        <div class="mt-16 flex wrap gap-10">
-          <span class="chip green">免注册</span>
-          <span class="chip green">查询不限次</span>
-          <span class="chip green">无付费墙</span>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="display:flex;align-items:center;gap:8px;">👤 注册后多什么</h3>
-        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
-          可把志愿方案<b>保存到账号</b>、在留言板按分类<b>发布提问</b>、回看历史记录。
-          仍然全部免费。
-        </p>
-        <div class="mt-16 flex wrap gap-10">
-          <span class="chip">每日 10 次模拟填报</span>
-          <span class="chip">最多保存 20 份方案</span>
-          <span class="chip">可发帖提问</span>
-        </div>
-      </div>
-      <div class="card">
-        <h3 style="display:flex;align-items:center;gap:8px;">🎫 会员（演示中）</h3>
-        <p class="mt-10" style="color:var(--ink-2);line-height:1.9;">
-          模拟填报不限次数、方案不限份数、提问优先展示。
-          <b>当前为演示模式，可直接一键切换体验，不收取任何费用。</b>
-        </p>
-        <div class="mt-16">
-          <a class="btn btn-ghost btn-sm" href="account.html">去账号中心体验 →</a>
-        </div>
-      </div>
-    </div>
-    <div class="demo-note mt-16" style="margin-top:16px;">
-      账号与留言板目前是「前端体验版」：数据只保存在你本机浏览器，不上传任何服务器，也不采集个人信息。
-      <a href="legal.html">隐私与版权说明 →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 热门专业速览（精简为一行快捷入口） ===== -->
-<section class="section">
-  <div class="container">
-    <div class="section-head">
-      <div class="tag">HOT MAJORS</div>
-      <h2>大家最常查的专业</h2>
-      <p>点一下直接看解读</p>
-    </div>
-    <div class="grid g3" id="hotMajors"></div>
-  </div>
-</section>
-
-<!-- ===== CTA ===== -->
-<section class="section" style="padding: 40px 0 80px;">
-  <div class="container">
-    <div class="card text-center" style="padding: 46px 30px; background:linear-gradient(135deg,#1d2b64,#2456e6); border:none; color:#fff;">
-      <h2 style="color:#fff; font-size:26px;">别让十几年的努力，输在最后一哆嗦</h2>
-      <p style="color:rgba(255,255,255,.85); margin:14px 0 26px; font-size:15px;">2 分钟输入省份、选科、分数，免费生成你的专属志愿方案</p>
-      <a class="btn" style="background:#fff; color:#2456e6;" href="plan.html">🎯 立即生成我的志愿方案</a>
-    </div>
-  </div>
-</section>
+</div>
 
 <div id="siteFooter"></div>
 
@@ -255,36 +111,66 @@
 <script src="assets/js/data-majors-merge.js"></script>
 <script src="assets/js/data-colleges.js"></script>
 <script src="assets/js/data-colleges-all.js"></script>
-<script src="assets/vendor/echarts.min.js"></script>
-<script src="assets/json/china.js"></script>
 <script src="assets/js/kb.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/theme.js"></script>
 <script src="assets/js/assistant.js"></script>
 <script>
-buildShell("home");
+/* 首页用精简页脚，保证「一屏不滚动」 */
+buildShell("home", { compactFooter: true });
 
-/* 首页全局搜索：一个入口同时搜「专业」和「高校」，结果就地展示 */
+/* ===== 全局搜索：结果在浮层里展示，不改变文档高度 ===== */
 (function () {
   const input = document.getElementById("hsInput");
-  const box = document.getElementById("homeSearch");
-  const results = document.getElementById("hsResults");
-  const hint = document.getElementById("hsHint");
-  if (!input) return;
+  const btn = document.getElementById("hsBtn");
+  const clearBtn = document.getElementById("hsClear");
+  const ov = document.getElementById("hsOverlay");
+  const panel = ov ? ov.querySelector(".hm-overlay-panel") : null;
+  const res = document.getElementById("hsResults");
+  const kw = document.getElementById("hsKw");
+  if (!input || !btn || !ov) return;
 
-  input.addEventListener("input", () => {
-    box.classList.toggle("has-val", !!input.value.trim());
-  });
-  document.getElementById("hsClear").addEventListener("click", () => {
-    input.value = ""; box.classList.remove("has-val");
-    results.classList.remove("open"); results.innerHTML = "";
-    hint.style.display = ""; input.focus();
-  });
+  function syncClear() {
+    clearBtn.style.display = input.value.trim() ? "grid" : "none";
+  }
+  function openOverlay() {
+    ov.classList.add("open");
+    document.body.classList.add("hm-lock");
+    if (panel) panel.focus();
+  }
+  function closeOverlay() {
+    ov.classList.remove("open");
+    document.body.classList.remove("hm-lock");
+  }
+
+  function card(m, type) {
+    if (type === "major") {
+      return `<a class="hs-card" href="majors.html?q=${encodeURIComponent(m.name)}">
+        <div class="hs-card-h"><b>${esc(m.name)}</b><span class="chip gray">专业</span></div>
+        <div class="hs-card-m">${esc(m.code || "")} · ${esc(m.cat)} / ${esc(m.sub || "—")} · 学制 ${m.years} 年</div>
+        <div class="hs-card-d">${esc((m.intro || "").slice(0, 58))}${(m.intro || "").length > 58 ? "…" : ""}</div>
+      </a>`;
+    }
+    const tags = (m.tags && m.tags.length) ? m.tags : (m.cat ? [m.cat] : []);
+    const TAG_CLS = { "C9": "purple", "985": "purple", "211": "gold", "双一流": "green" };
+    const chips = tags.slice(0, 3).map(t =>
+      `<span class="chip ${TAG_CLS[t] || "gray"}">${esc(t)}</span>`).join("") ||
+      `<span class="chip gray">${esc(m.level || "院校")}</span>`;
+    const sub = m.code
+      ? `${esc(m.city)} · 标识码 ${esc(m.code)}`
+      : `${esc(m.prov)} · ${esc(m.city)} · 军队院校`;
+    const desc = (m.elite && m.elite.note) || m.note || "";
+    return `<a class="hs-card" href="college.html?name=${encodeURIComponent(m.name)}">
+      <div class="hs-card-h"><b>${esc(m.name)}</b>${chips}</div>
+      <div class="hs-card-m">${sub}</div>
+      ${desc ? `<div class="hs-card-d">${esc(desc)}</div>` : ""}
+    </a>`;
+  }
 
   function run() {
     const q = input.value.trim();
-    input.blur();                                  // 收起手机键盘
-    if (!q) { toast("请输入专业或高校名称"); return; }
+    input.blur();
+    if (!q) { input.focus(); return; }
 
     const majors = (window.MAJORS || []).filter(m =>
       m.name.includes(q) || (m.sub || "").includes(q) || (m.cat || "").includes(q) ||
@@ -293,117 +179,53 @@ buildShell("home");
 
     const colleges = (window.COLLEGES_ALL || window.COLLEGES || []).filter(c =>
       c.name.includes(q) || (c.code || "").includes(q) || (c.city || "").includes(q) ||
-      (c.dept || "").includes(q) || c.prov === q || (c.elite && (c.elite.tags || []).some(t => t.includes(q)))
+      (c.dept || "").includes(q) || c.prov === q ||
+      (c.elite && (c.elite.tags || []).some(t => t.includes(q)))
     ).slice(0, 6);
 
+    kw.textContent = "“" + q + "”";
+
     if (!majors.length && !colleges.length) {
-      hint.style.display = "none";
-      results.className = "hs-results open";
-      results.innerHTML = `<div class="hs-empty">没有找到「${esc(q)}」相关的专业或高校。<br>
+      res.innerHTML = `<div class="hs-empty">没有找到「${esc(q)}」相关的专业或高校。<br>
         <span class="muted small">换个说法试试，或直接去
         <a href="majors.html?q=${encodeURIComponent(q)}">专业百科</a>、
         <a href="colleges.html?q=${encodeURIComponent(q)}">高校名单</a> 看看。</span></div>`;
+      openOverlay();
       return;
     }
 
-    const mHtml = majors.map(m => `
-      <a class="hs-card" href="majors.html?q=${encodeURIComponent(m.name)}">
-        <div class="hs-card-h">
-          <b>${esc(m.name)}</b>
-          <span class="chip gray">专业</span>
-        </div>
-        <div class="hs-card-m">${esc(m.code || "")} · ${esc(m.cat)} / ${esc(m.sub || "—")} · 学制 ${m.years} 年</div>
-        <div class="hs-card-d">${esc((m.intro || "").slice(0, 58))}${(m.intro || "").length > 58 ? "…" : ""}</div>
-      </a>`).join("");
-
-    const cHtml = colleges.map(c => {
-      const tags = (c.tags && c.tags.length) ? c.tags : (c.cat ? [c.cat] : []);
-      const TAG_CLS = { "C9": "purple", "985": "purple", "211": "gold", "双一流": "green" };
-      const chips = tags.slice(0, 3).map(t =>
-        `<span class="chip ${TAG_CLS[t] || "gray"}">${esc(t)}</span>`).join("") ||
-        `<span class="chip gray">${esc(c.level || "院校")}</span>`;
-      const sub = c.code
-        ? `${esc(c.city)} · 标识码 ${esc(c.code)}`
-        : `${esc(c.prov)} · ${esc(c.city)} · 军队院校`;
-      const desc = (c.elite && c.elite.note) || c.note || "";
-      return `
-      <a class="hs-card" href="college.html?name=${encodeURIComponent(c.name)}">
-        <div class="hs-card-h">
-          <b>${esc(c.name)}</b>
-          ${chips}
-        </div>
-        <div class="hs-card-m">${sub}</div>
-        ${desc ? `<div class="hs-card-d">${esc(desc)}</div>` : ""}
-      </a>`; }).join("");
-
-    hint.style.display = "none";
-    results.className = "hs-results open";
-    results.innerHTML =
-      (majors.length ? `<div class="hs-group">📚 专业（${majors.length}）</div>${mHtml}` : "") +
-      (colleges.length ? `<div class="hs-group">🏛️ 高校（${colleges.length}）</div>${cHtml}` : "") +
+    res.innerHTML =
+      (majors.length ? `<div class="hs-group">📚 专业（${majors.length}）</div>` +
+        majors.map(m => card(m, "major")).join("") : "") +
+      (colleges.length ? `<div class="hs-group">🏛️ 高校（${colleges.length}）</div>` +
+        colleges.map(c => card(c, "college")).join("") : "") +
       `<div class="hs-more">
          <a href="majors.html?q=${encodeURIComponent(q)}">在专业百科中查看全部 →</a>
          <a href="colleges.html?q=${encodeURIComponent(q)}">在高校名单中查看全部 →</a>
        </div>`;
+    openOverlay();
   }
 
-  document.getElementById("hsBtn").addEventListener("click", run);
+  btn.addEventListener("click", run);
   input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); run(); } });
+  input.addEventListener("input", syncClear);
+  clearBtn.addEventListener("click", () => {
+    input.value = ""; syncClear(); input.focus();
+  });
+  document.getElementById("hsClose").addEventListener("click", closeOverlay);
+  ov.addEventListener("click", e => { if (e.target === ov) closeOverlay(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeOverlay(); });
 
-  /* 快捷标签：点一下直接出结果，省去打字 */
+  /* 快捷标签：点一下直接出结果 */
   document.querySelectorAll("#quickTags button").forEach(b => {
     b.addEventListener("click", () => {
       input.value = b.dataset.q;
-      box.classList.add("has-val");
+      syncClear();
       run();
     });
   });
-})();
 
-/* 首页迷你地图（ECharts 全国填充） */
-(function () {
-  const el = document.getElementById("heroMiniMap");
-  if (!el || typeof echarts === "undefined") return;
-  const chart = echarts.init(el);
-  if (window.CHINA_GEO) echarts.registerMap("china", window.CHINA_GEO);
-  const list = [];
-  Object.keys(PROVINCES).forEach(k => {
-    const p = PROVINCES[k];
-    if (p.region === "台港澳") return;
-    list.push({ name: p.full, value: p.candidates });
-  });
-  chart.setOption({
-    tooltip: { show: false },
-    visualMap: { show: false, min: 0, max: 140, inRange: { color: ["#dce7ff", "#5b7cff"] } },
-    series: [{
-      type: "map", map: "china", roam: false, zoom: 1.18,
-      label: { show: false },
-      itemStyle: { borderColor: "#fff", borderWidth: 1, areaColor: "#e3ebff" },
-      emphasis: { label: { show: false }, itemStyle: { areaColor: "#5b7cff" } },
-      data: list
-    }]
-  });
-  window.addEventListener("resize", () => chart.resize());
-})();
-
-/* 热门专业渲染 */
-(function () {
-  const box = document.getElementById("hotMajors");
-  if (!box) return;
-  const picks = ["计算机科学与技术", "临床医学", "电气工程及其自动化"].map(n => MAJORS.find(m => m.name === n)).filter(Boolean);
-  box.innerHTML = picks.map(m => `
-    <a class="card hoverable" href="majors.html?q=${encodeURIComponent(m.name)}" style="display:block;color:inherit;cursor:pointer;">
-      <div class="flex between items-center">
-        <h3>${m.name}</h3>
-        <span class="chip ${m.rating >= 4 ? "green" : m.rating === 3 ? "gold" : "red"}">${m.rating >= 4 ? "推荐" : m.rating === 3 ? "看情况" : "谨慎"}</span>
-      </div>
-      <p class="muted small mb-8">${m.cat} · ${m.sub}｜${m.req}</p>
-      <p>${m.intro.slice(0, 46)}…</p>
-      <div class="mt-10">
-        <span class="chip">💰 ${m.salary}/月</span>
-        <span class="chip gold">AI ${m.aiRisk.includes("低") ? "低冲击" : m.aiRisk.includes("高") ? "高冲击" : "中冲击"}</span>
-      </div>
-    </a>`).join("");
+  syncClear();
 })();
 </script>
 </body>
