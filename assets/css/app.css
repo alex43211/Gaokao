@@ -22,7 +22,7 @@
 .ub-guest:hover { background: #dbe7ff; }
 .ub-user {
   display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px;
-  border-radius: 999px; background: #fff; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
   font-size: 13px; font-weight: 800; color: var(--ink); white-space: nowrap;
 }
 .ub-user:hover { border-color: var(--brand); }
@@ -57,7 +57,7 @@
 }
 .quick-tags .qt-lb { font-size: 12.5px; color: var(--ink-3); font-weight: 700; }
 .quick-tags button {
-  border: 1px solid var(--line); background: #fff; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
   padding: 5px 13px; font-family: var(--font); font-size: 12.5px; font-weight: 700;
   color: var(--ink-2); cursor: pointer; transition: .18s;
 }
@@ -82,12 +82,12 @@
 .notice.danger { background: var(--red-soft); border-color: #f8cccc; color: #a5272b; }
 
 .quota {
-  background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 15px 17px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 15px 17px;
 }
 .quota-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; flex-wrap: wrap; }
 .quota-h b { font-size: 14px; font-weight: 800; }
 .quota-h .qv { font-size: 12.5px; color: var(--ink-3); font-weight: 700; }
-.quota-bar { height: 9px; border-radius: 999px; background: #eef1f6; overflow: hidden; }
+.quota-bar { height: 9px; border-radius: 999px; background: var(--surface-4); overflow: hidden; }
 .quota-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brand), #5f6bff); transition: width .45s ease; }
 .quota-fill.warn { background: linear-gradient(90deg, #f5b301, #ff8a3d); }
 .quota-fill.full { background: linear-gradient(90deg, #e5484d, #ff7a7e); }
@@ -95,31 +95,31 @@
 
 /* ---------- 4. 账号中心 ---------- */
 .acc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px; align-items: start; }
-.acc-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+.acc-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
 .acc-card h2 { font-size: 19px; font-weight: 900; margin-bottom: 6px; }
 .acc-card h3 { font-size: 15.5px; font-weight: 800; margin-bottom: 10px; }
 .acc-card > p.sub { color: var(--ink-2); font-size: 13.6px; margin-bottom: 18px; }
 
-.tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #f1f4fa; padding: 5px; border-radius: 12px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; background: var(--surface-3); padding: 5px; border-radius: 12px; }
 .tabs button {
   flex: 1; border: none; background: transparent; border-radius: 9px; padding: 10px 6px;
   font-family: var(--font); font-size: 14px; font-weight: 800; color: var(--ink-2); cursor: pointer; transition: .18s;
 }
-.tabs button.on { background: #fff; color: var(--brand); box-shadow: 0 3px 10px rgba(28, 44, 90, .09); }
+.tabs button.on { background: var(--surface); color: var(--brand); box-shadow: 0 3px 10px rgba(28, 44, 90, .09); }
 
 .field { margin-bottom: 15px; }
 .field label { display: block; font-size: 13px; font-weight: 800; color: var(--ink-2); margin-bottom: 6px; }
 .field input {
   width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 11px;
   padding: 0 13px; font-family: var(--font); font-size: 15px; color: var(--ink);
-  background: #fbfcff; transition: .18s;
+  background: var(--surface-2); transition: .18s;
 }
-.field input:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px rgba(36, 86, 230, .12); }
+.field input:focus { outline: none; border-color: var(--brand); background: var(--surface); box-shadow: 0 0 0 3px rgba(36, 86, 230, .12); }
 .field input.bad { border-color: var(--red); background: #fffafa; }
 .field .ferr { font-size: 12.2px; color: var(--red); margin-top: 5px; display: none; }
 .field.show-err .ferr { display: block; }
 .acc-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-.pwd-meter { height: 6px; border-radius: 999px; background: #eef1f6; margin-top: 8px; overflow: hidden; }
+.pwd-meter { height: 6px; border-radius: 999px; background: var(--surface-4); margin-top: 8px; overflow: hidden; }
 .pwd-meter i { display: block; height: 100%; width: 0; border-radius: 999px; transition: .3s; background: var(--red); }
 .pwd-meter.s2 i { width: 40%; background: #f5b301; }
 .pwd-meter.s3 i { width: 70%; background: #2a7cff; }
@@ -127,7 +127,7 @@
 
 .role-cards { display: grid; gap: 12px; }
 .role-card {
-  border: 1.5px solid var(--line); border-radius: 14px; padding: 15px 17px; background: #fff; transition: .2s;
+  border: 1.5px solid var(--line); border-radius: 14px; padding: 15px 17px; background: var(--surface); transition: .2s;
 }
 .role-card.on { border-color: var(--brand); background: var(--brand-soft); }
 .role-card.is-member.on { border-color: #e9b106; background: #fffaf0; }
@@ -138,28 +138,28 @@
 
 .plan-item {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  border: 1px solid var(--line); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; background: #fbfcff;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; background: var(--surface-2);
 }
 .plan-item .pi-t { font-size: 14px; font-weight: 800; }
 .plan-item .pi-m { font-size: 12.3px; color: var(--ink-3); margin-top: 2px; }
 .plan-item .pi-del {
-  border: 1px solid var(--line); background: #fff; color: var(--ink-3); border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-3); border-radius: 8px;
   padding: 5px 11px; font-family: var(--font); font-size: 12.3px; font-weight: 700; cursor: pointer; flex: 0 0 auto;
 }
 .plan-item .pi-del:hover { border-color: var(--red); color: var(--red); }
-.empty-box { text-align: center; padding: 26px 16px; color: var(--ink-3); font-size: 13.6px; background: #fafbff; border: 1px dashed var(--line); border-radius: 12px; }
+.empty-box { text-align: center; padding: 26px 16px; color: var(--ink-3); font-size: 13.6px; background: var(--surface-2); border: 1px dashed var(--line); border-radius: 12px; }
 
 /* ---------- 5. 留言板 ---------- */
 .board-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; align-items: start; }
 .cat-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .cat-tabs button {
-  border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 16px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 16px;
   font-family: var(--font); font-size: 13.4px; font-weight: 800; color: var(--ink-2); cursor: pointer; transition: .18s;
 }
 .cat-tabs button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .cat-tabs button span { opacity: .7; font-weight: 700; margin-left: 3px; }
 
-.post { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 14px; }
+.post { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; margin-bottom: 14px; }
 .post.is-demo { background: linear-gradient(180deg, #fffdf6, #fff); border-color: #f3e6c4; }
 .post-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .post-t { font-size: 16px; font-weight: 900; line-height: 1.5; }
@@ -167,7 +167,7 @@
 .post-body { font-size: 14.2px; color: var(--ink-2); line-height: 1.9; white-space: pre-wrap; word-break: break-word; }
 .post-acts { display: flex; gap: 10px; align-items: center; margin-top: 13px; padding-top: 12px; border-top: 1px dashed var(--line); flex-wrap: wrap; }
 .post-acts button {
-  border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 14px;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px;
   font-family: var(--font); font-size: 12.6px; font-weight: 800; color: var(--ink-2); cursor: pointer; transition: .18s;
 }
 .post-acts button:hover { border-color: var(--brand); color: var(--brand); }
@@ -177,12 +177,12 @@
 .board-form .field textarea {
   width: 100%; min-height: 120px; border: 1px solid var(--line); border-radius: 11px;
   padding: 11px 13px; font-family: var(--font); font-size: 14.5px; color: var(--ink);
-  background: #fbfcff; resize: vertical; line-height: 1.8;
+  background: var(--surface-2); resize: vertical; line-height: 1.8;
 }
-.board-form .field textarea:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px rgba(36, 86, 230, .12); }
+.board-form .field textarea:focus { outline: none; border-color: var(--brand); background: var(--surface); box-shadow: 0 0 0 3px rgba(36, 86, 230, .12); }
 .cat-pick { display: flex; flex-wrap: wrap; gap: 8px; }
 .cat-pick button {
-  border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 9px 14px;
+  border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 14px;
   font-family: var(--font); font-size: 13.2px; font-weight: 800; color: var(--ink-2); cursor: pointer;
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; transition: .18s; text-align: left;
 }
@@ -198,11 +198,11 @@
    一旦正文里出现宽表格（如数据来源表里的长网址），
    整条轨道会被顶宽并把页面撑出横向滚动条。 */
 .doc-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 30px; align-items: start; }
-.doc-toc { min-width: 0; position: sticky; top: calc(var(--nav-h) + 16px); background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 14px; }
+.doc-toc { min-width: 0; position: sticky; top: calc(var(--nav-h) + 16px); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 14px; }
 .doc-toc h4 { font-size: 12.4px; letter-spacing: 1.4px; color: var(--ink-3); font-weight: 800; margin-bottom: 10px; }
 .doc-toc a { display: block; font-size: 13.4px; color: var(--ink-2); padding: 7px 10px; border-radius: 8px; font-weight: 700; }
 .doc-toc a:hover { background: var(--brand-soft); color: var(--brand); }
-.doc { min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 38px; }
+.doc { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 38px; }
 .doc h2 { font-size: 20px; font-weight: 900; margin: 34px 0 12px; padding-top: 22px; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--nav-h) + 16px); }
 .doc h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .doc h3 { font-size: 15.5px; font-weight: 800; margin: 20px 0 8px; }
@@ -210,7 +210,7 @@
 .doc ul, .doc ol { margin: 10px 0 14px; padding-left: 22px; }
 .doc li { font-size: 14.2px; color: var(--ink-2); line-height: 1.95; margin-bottom: 6px; }
 .doc b, .doc strong { color: var(--ink); font-weight: 800; }
-.doc code { background: #f1f4fa; border-radius: 5px; padding: 1px 6px; font-size: 13px; color: var(--brand-dark); }
+.doc code { background: var(--surface-3); border-radius: 5px; padding: 1px 6px; font-size: 13px; color: var(--brand-dark); }
 .doc .doc-meta { font-size: 12.6px; color: var(--ink-3); margin-bottom: 22px; }
 .doc table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 13.6px; }
 .doc th { background: var(--brand-soft); color: var(--brand-dark); text-align: left; padding: 10px 13px; font-weight: 800; font-size: 13px; border: 1px solid var(--line); }
@@ -250,7 +250,7 @@
 .foot-consult-qrbox { text-align: center; }
 .foot-consult-qr {
   display: block; width: 158px; padding: 12px 12px 9px;
-  border: 0; border-radius: 16px; background: #fff; cursor: zoom-in;
+  border: 0; border-radius: 16px; background: var(--surface); cursor: zoom-in;
   font-family: inherit; box-shadow: 0 8px 22px rgba(0,0,0,.3);
   transition: transform .22s, box-shadow .22s;
 }

@@ -5,6 +5,56 @@
   window.APP = window.APP || { name: "恩卓智选" };
   window.APP.LOGO_SRC = "assets/logo.jpg";
   window.APP.LOGO_EN = "ENZO CURATED";
+
+  /* ============================================================
+     主题：浅色 / 深蓝
+     · 只负责写 <html data-theme>，配色全部由 style.css 的变量层接管
+     · 选择记在 localStorage，跨页面、跨刷新都保持一致
+     · 首帧防闪由各页 <head> 里的内联脚本完成（见 *.html）
+     ============================================================ */
+  const THEME_KEY = "enzo_theme";
+  window.Theme = (function () {
+    const root = document.documentElement;
+    const LABEL = { light: "切换为深色背景", dark: "切换为浅色背景" };
+    const ICON = { light: "🌙", dark: "☀️" };
+
+    function current() {
+      return root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    }
+    /* 让所有切换按钮（含未来新增的）与当前主题保持一致 */
+    function sync() {
+      const t = current();
+      document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+        btn.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
+        btn.setAttribute("aria-label", LABEL[t]);
+        btn.title = LABEL[t];
+        const ico = btn.querySelector(".tt-ico");
+        if (ico) ico.textContent = ICON[t];
+      });
+    }
+    function set(t) {
+      const next = t === "dark" ? "dark" : "light";
+      root.setAttribute("data-theme", next);
+      root.style.colorScheme = next;          // 让原生控件（滚动条、输入框）跟着变
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) { }
+      sync();
+      /* 图表等需要重绘的地方可以监听这个事件 */
+      document.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
+      return next;
+    }
+    function toggle() {
+      return set(current() === "dark" ? "light" : "dark");
+    }
+
+    /* 首帧内联脚本通常已写好 data-theme；缺失时（理论上不会）补一次 */
+    if (!root.getAttribute("data-theme")) {
+      let saved = "light";
+      try { saved = localStorage.getItem(THEME_KEY) || "light"; } catch (e) { }
+      set(saved);
+    }
+    return { current: current, set: set, toggle: toggle, sync: sync };
+  })();
+
   // 线上地址：仅用于页脚「分享本站」展示与复制，非本项目域名访问时也能显示
   window.APP.SITE_URL = "https://alex43211.github.io/Gaokao/";
   const SITE_URL = window.APP.SITE_URL;
@@ -44,6 +94,10 @@
           <div class="topbar-actions">
             <div class="user-box" id="userBox"></div>
             <a href="plan.html" class="btn btn-brand btn-sm">模拟填报</a>
+            <button type="button" class="theme-toggle" data-theme-toggle
+                    aria-pressed="false" aria-label="切换背景配色" title="切换深色 / 浅色背景">
+              <span class="tt-ico" aria-hidden="true">🌙</span>
+            </button>
             <button type="button" class="nav-toggle" id="navToggle"
                     aria-label="打开菜单" aria-expanded="false" aria-controls="mobileNav">
               <span></span><span></span><span></span>
@@ -61,6 +115,15 @@
 
     /* 顶栏账号区（登录态由 auth.js 提供；未接入时静默跳过） */
     if (window.__renderUserBox) window.__renderUserBox();
+
+    /* 主题切换按钮：与当前主题同步，并在点击时切换 + 轻提示 */
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const t = window.Theme.toggle();
+        if (window.toast) window.toast(t === "dark" ? "已切换为深蓝背景" : "已切换为浅色背景");
+      });
+    });
+    window.Theme.sync();
 
     /* 汉堡菜单开合（窄屏专用） */
     (function () {
