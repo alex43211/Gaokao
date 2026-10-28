@@ -157,7 +157,7 @@
           <a href="legal.html">隐私与免责</a>
           <span class="foot-min-note">分数线 / 招生计划均为演示数据</span>
         </div>
-        <div class="foot-stats" id="footStats" hidden>
+        <div class="foot-stats" id="footStats" data-reserve="1">
           <span class="fs-badge">📊 访问统计</span>
           <span class="fs-item"><span class="fs-lb">总访问量</span><b class="fs-v" id="fsSitePv">—</b><span class="fs-u">次</span></span>
           <span class="fs-sep"></span>
@@ -424,7 +424,17 @@
   window.initVisitStats = function () {
     const box = document.getElementById("footStats");
     if (!box) return;
-    if (!window.fetch) { box.hidden = true; return; }
+
+    /* 首页用 data-reserve="1"：块从一开始就占位（数字显示「—」），
+       取数成功再填数字、失败只置灰，绝不隐藏 ——
+       这样页脚高度恒定，统计异步返回时不会把首屏内容顶一下。 */
+    const RESERVE = box.dataset.reserve === "1";
+    const hideBox = function () {
+      if (RESERVE) box.dataset.na = "1";
+      else box.hidden = true;
+    };
+
+    if (!window.fetch) { hideBox(); return; }
 
     const FIELDS = {
       site_pv: document.getElementById("fsSitePv"),
@@ -446,7 +456,7 @@
       if (!h || h === "localhost" || h === "127.0.0.1" || h === "::1" || h.endsWith(".local")) return null;
       return location.href;
     })();
-    if (!liveUrl && !forced) { box.hidden = true; return; }
+    if (!liveUrl && !forced) { hideBox(); return; }
 
     const fmt = function (n) { return Number(n).toLocaleString("zh-CN"); };
     const noMotion = function () {
@@ -480,8 +490,9 @@
         if (v === null || v === undefined || !isFinite(v)) { markNa(el); return; }
         el.dataset.n = v; shown++;
       });
-      if (!shown) { box.hidden = true; return false; }
+      if (!shown) { hideBox(); return false; }
       box.hidden = false;
+      delete box.dataset.na;
       Object.keys(FIELDS).forEach(function (k) {
         const el = FIELDS[k];
         if (el && el.dataset.n !== undefined) countUp(el, Number(el.dataset.n));
@@ -562,7 +573,7 @@
       }
 
       if (!data && rd) { data = rd.d; cached = true; }
-      if (!data) { box.hidden = true; return; }   // 全部失败：整块隐藏
+      if (!data) { hideBox(); return; }   // 全部失败：整块隐藏（首页只置灰，保留占位）
 
       if (cached) {
         box.dataset.cached = "1";

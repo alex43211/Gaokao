@@ -1014,10 +1014,13 @@ body.hm-lock { overflow: hidden; }
   color: var(--brand); background: var(--brand-soft); border: 1px solid var(--line);
 }
 .foot-min .fs-lb { font-size: 11.5px; color: var(--ink-3); }
-.foot-min .fs-v { font-size: 13.5px; color: var(--ink); }
+.foot-min .fs-v { font-size: 13.5px; color: var(--ink); min-width: 2.6em; }
 .foot-min .fs-u { font-size: 11px; color: var(--ink-3); }
 .foot-min .fs-sep { height: 11px; background: var(--line); }
 .foot-min .fs-item.na .fs-v { color: var(--ink-3); }
+/* 占位态（数据未到 / 取数失败）：保留高度只置灰，避免页脚高度突变 */
+.foot-min .foot-stats[data-na="1"] .fs-v { color: var(--ink-3); font-weight: 700; }
+.foot-min .foot-stats[data-na="1"] .fs-badge { opacity: .6; }
 
 @media (max-width: 720px) {
   .hm-wrap { gap: 14px; padding: 16px 16px 14px; }
